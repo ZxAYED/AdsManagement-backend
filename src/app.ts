@@ -1,0 +1,43 @@
+import express, { Application, NextFunction, Request, Response } from "express";
+import cors from "cors";
+
+import router from "./app/routes";
+import status from "http-status";
+import globalErrorHandler from "./app/middlewares/globalErrorHandler";
+import cookieParser from "cookie-parser";
+
+const app: Application = express();
+
+
+
+
+app.use(cors({
+  origin: ["*"],
+  credentials: true,
+}));
+
+app.use(cookieParser());
+
+// parser
+app.use(express.json({ limit: '500mb' })); // increase JSON body limit
+app.use(express.urlencoded({ limit: '500mb', extended: true })); // increase form body limit
+
+app.use("/api", router);
+app.use(globalErrorHandler);
+
+app.get("/", (req: Request, res: Response) => {
+  res.send("Server is running");
+});
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(status.NOT_FOUND).json({
+    success: false,
+    message: "API NOT FOUND",
+    error: {
+      path: req.originalUrl,
+      message: "Your requested path is not found",
+    },
+  });
+});
+
+export default app;
