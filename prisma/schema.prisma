@@ -7,36 +7,77 @@ datasource db {
   url       = env("DATABASE_URL")
 }
 
-enum UserStatus {
-  ACTIVE
-  BLOCKED
+model User {
+  id                String           @id @default(uuid())
+  first_name        String
+  last_name         String
+  phone             String
+  email             String           @unique
+  password          String
+  organisation_name String
+  role              USER_ROLE
+  organisation_role ORGANISATION_ROLE
+  screens           Screen[]         @relation("UserScreens")
+  bundles           Bundle[]         @relation("UserBundles")
 }
 
 enum USER_ROLE {
+  customer
   admin
-  marchant
+}
+
+enum ORGANISATION_ROLE {
+  advertiser
+  agency
+}
+
+model Screen {
+  id          String         @id @default(uuid())
+  adminId     String
+  slug        String
+  screen_name String
+  screen_size String
+  description String
+  resolution String
+  lat         String
+  lng         String
+  img_url     String
+  price       Float
+  duration    String
+  availability SCREEN_AVAILABILITY
+  status      SCREEN_STATUS
+  location    String
+  admin       User           @relation("UserScreens", fields: [adminId], references: [id])
+  bundles     Bundle[]       @relation("BundleScreens")
+
 }
 
 
-model User {
-  id                      String           @id @default(uuid())
-  name                    String
-  businessName            String
-  address_Pickup_Location String
-  phone                   String
-  email                   String           @unique
-  otp                     String?
-  otpExpiry               DateTime?
-  isVerified              Boolean          @default(false)
-  resetOtp                String?
-  resetOtpExpiry          DateTime?
-  role                    USER_ROLE
-  password                String
-  status                  UserStatus       @default(ACTIVE)
 
-  isDeleted               Boolean          @default(false)
-  createdAt               DateTime         @default(now())
-  updatedAt               DateTime         @updatedAt
-  
+enum SCREEN_AVAILABILITY {
+  available
+  maintenance
+}
+
+enum SCREEN_STATUS {
+  active
+  occupied
+}
+model Bundle {
+  id          String        @id @default(uuid())
+  adminId     String
+  bundle_name String
+  screens     Screen[]      @relation("BundleScreens")
+  img_url     String
+  price       Float
+  duration    String
+  status      BUNDLE_STATUS
+  location    String
+  admin       User          @relation("UserBundles", fields: [adminId], references: [id])
+}
+
+enum BUNDLE_STATUS {
+  ongoing
+  expired
 }
 
