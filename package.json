@@ -1,5 +1,5 @@
 {
-  "name": "uuing-courier",
+  "name": "backend-server",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,6 @@
     "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.2.0",
-    "@types/nodemailer": "^7.0.1",
     "prisma": "^6.5.0",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.19.3",
@@ -36,6 +35,7 @@
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
@@ -44,7 +44,6 @@
     "mime-types": "^3.0.1",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.5",
     "stripe": "^18.4.0",
     "uuid": "^11.1.0"
   }

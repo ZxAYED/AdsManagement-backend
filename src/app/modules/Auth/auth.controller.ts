@@ -1,4 +1,6 @@
-import { Request, RequestHandler } from "express";
+
+
+import { RequestHandler } from "express";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import status from "http-status";
@@ -11,67 +13,6 @@ const createUser: RequestHandler = catchAsync(async (req, res) => {
     statusCode: status.OK,
     success: true,
     message: "User Registration Successfuly.",
-    data: result,
-  });
-});
-const verifyOtp: RequestHandler = catchAsync(async (req, res) => {
-  const result = await UserService.verifyOtp(req.body.email, req.body.otp);
-
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "OTP verification successful.",
-    data: result,
-  });
-});
-const resendOtp: RequestHandler = catchAsync(async (req, res) => {
-  const result = await UserService.resendOtp(req.body.email);
-
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "OTP resent successfully.",
-    data: result,
-  });
-});
-const forgotPassword: RequestHandler = catchAsync(async (req, res) => {
-  const result = await UserService.forgotPassword(req.body.email);
-
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "OTP sent successfully.",
-    data: result,
-  });
-});
-
-const resetPassword: RequestHandler = catchAsync(async (req, res) => {
-  const result = await UserService.resetPassword(
-    req.body.email,
-    req.body.otp,
-    req.body.newPassword
-  );
-
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Password reset successful.",
-    data: result,
-  });
-});
-const changePassword: RequestHandler = catchAsync(async (req:Request &{user?:any}, res) => {
-
-  const data={
-    userId: req.user?.id,
-    oldPassword: req.body.oldPassword,
-    newPassword: req.body.newPassword
-  }
-  const result = await UserService.changePassword(data);
-
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Password reset successful.",
     data: result,
   });
 });
@@ -95,7 +36,7 @@ const loginUser: RequestHandler = catchAsync(async (req, res) => {
 
 const refreshToken: RequestHandler = catchAsync(async (req, res) => {
   const refreshToken = req.cookies.refreshToken; // cookie থেকে নিচ্ছি
-  // console.log({ refreshToken });
+  console.log({refreshToken});
 
   const result = await UserService.refreshAccessToken(refreshToken);
 
@@ -110,10 +51,5 @@ const refreshToken: RequestHandler = catchAsync(async (req, res) => {
 export const UserController = {
   createUser,
   loginUser,
-  resendOtp,
-  refreshToken,
-  verifyOtp,
-  forgotPassword,
-  resetPassword,
-  changePassword
+  refreshToken, // ✅ এটা export করতে ভুলবে না
 };

@@ -5,22 +5,20 @@ import router from "./app/routes";
 import status from "http-status";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import cookieParser from "cookie-parser";
+// import { ParcelController } from "./app/modules/Parcel/parcel.controller";
 
 const app: Application = express();
 
-
-
-
 app.use(cors({
-  origin: ["*"],
+  origin: ["https://unnig-couier.vercel.app","http://localhost:5173"],
   credentials: true,
 }));
 
 app.use(cookieParser());
 
 // parser
-app.use(express.json({ limit: '500mb' })); // increase JSON body limit
-app.use(express.urlencoded({ limit: '500mb', extended: true })); // increase form body limit
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 app.use(globalErrorHandler);
