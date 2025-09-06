@@ -7,6 +7,7 @@ datasource db {
   url       = env("DATABASE_URL")
 }
 
+
 model User {
   id                String           @id @default(uuid())
   first_name        String
@@ -19,6 +20,9 @@ model User {
   organisation_role ORGANISATION_ROLE
   screens           Screen[]         @relation("UserScreens")
   bundles           Bundle[]         @relation("UserBundles")
+  otp               String?          
+  otp_expires_at    DateTime?       
+  is_verified       Boolean          @default(false)
 }
 
 enum USER_ROLE {
