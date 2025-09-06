@@ -24,7 +24,6 @@ const getAllUsers = async (options: any) => {
     },
     select: {
       id: true,
-      name: true,
       email: true,
     },
   });

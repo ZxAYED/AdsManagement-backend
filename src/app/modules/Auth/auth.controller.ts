@@ -1,5 +1,3 @@
-
-
 import { RequestHandler } from "express";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
@@ -13,6 +11,26 @@ const createUser: RequestHandler = catchAsync(async (req, res) => {
     statusCode: status.OK,
     success: true,
     message: "User Registration Successfuly.",
+    data: result,
+  });
+});
+const resendOtp: RequestHandler = catchAsync(async (req, res) => {
+  const result = await UserService.resendOtp(req.body.email);
+
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "OTP resent successfully.",
+    data: result,
+  });
+});
+const verifyOtp: RequestHandler = catchAsync(async (req, res) => {
+  const result = await UserService.verifyOtp(req.body.email, req.body.otp);
+
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "OTP verified successfully.",
     data: result,
   });
 });
@@ -36,7 +54,7 @@ const loginUser: RequestHandler = catchAsync(async (req, res) => {
 
 const refreshToken: RequestHandler = catchAsync(async (req, res) => {
   const refreshToken = req.cookies.refreshToken; // cookie থেকে নিচ্ছি
-  console.log({refreshToken});
+  console.log({ refreshToken });
 
   const result = await UserService.refreshAccessToken(refreshToken);
 
@@ -51,5 +69,7 @@ const refreshToken: RequestHandler = catchAsync(async (req, res) => {
 export const UserController = {
   createUser,
   loginUser,
-  refreshToken, // ✅ এটা export করতে ভুলবে না
+  refreshToken,
+  resendOtp,
+  verifyOtp
 };
