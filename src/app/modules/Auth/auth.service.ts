@@ -22,8 +22,8 @@ const createUser = async (payload: User) => {
   const hashPassword = await bcrypt.hash(payload.password, 12);
 
   // Step 3: Generate OTP (4 digits) & expiry (e.g., 10 minutes)
-  const otp = Math.floor(1000 + Math.random() * 9000).toString(); 
-  const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); 
+  const otp = Math.floor(1000 + Math.random() * 9000).toString();
+  const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
   // Step 4: Prepare user data
   const userData = {
@@ -32,7 +32,7 @@ const createUser = async (payload: User) => {
     otp,
     otp_expires_at: otpExpiresAt,
     is_verified: false,
-   role: USER_ROLE.customer,
+    role: USER_ROLE.customer,
     organisation_role: ORGANISATION_ROLE.advertiser,
   };
 
@@ -52,11 +52,6 @@ const createUser = async (payload: User) => {
   sendOtpEmail(payload.email, otp);
 
   return result;
-
-
-
-
-
 };
 
 const resendOtp = async (email: string) => {
@@ -91,7 +86,6 @@ const resendOtp = async (email: string) => {
 
   return { message: "OTP resent successfully" };
 };
-
 
 const verifyOtp = async (email: string, otp: string) => {
   // Step 1: Find user by email
@@ -134,7 +128,6 @@ const verifyOtp = async (email: string, otp: string) => {
   return updatedUser;
 };
 
-
 const loginUser = async (payload: { email: string; password: string }) => {
   const userData = await prisma.user.findUnique({
     where: {
@@ -155,8 +148,6 @@ const loginUser = async (payload: { email: string; password: string }) => {
     throw new AppError(status.UNAUTHORIZED, "Your password is incorrect.");
   }
 
-
-
   const accessToken = jwtHelpers.generateToken(
     {
       id: userData.id,
@@ -165,10 +156,10 @@ const loginUser = async (payload: { email: string; password: string }) => {
       last_name: userData.last_name,
       role: userData.role,
       organisation_role: userData.organisation_role,
-      phone: userData.phone
+      phone: userData.phone,
     },
-    config.jwt.access_token_secret as Secret, 
-    config.jwt.access_token_expires_in as string 
+    config.jwt.access_token_secret as Secret,
+    config.jwt.access_token_expires_in as string
   );
 
   const refreshToken = jwtHelpers.generateToken(
@@ -194,29 +185,68 @@ const refreshAccessToken = async (token: string) => {
 
     const { email } = decoded;
 
-    const user = await prisma.user.findUnique({
+    const userData = await prisma.user.findFirst({
       where: { email },
     });
 
-    if (!user) {
+    if (!userData) {
       throw new AppError(status.NOT_FOUND, "User not found");
     }
 
-    const newAccessToken = jwtHelpers.generateToken(
+    const accessToken = jwtHelpers.generateToken(
       {
-        id: user.id,
-        email: user.email,
+        id: userData.id,
+        email: userData.email,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        role: userData.role,
+        organisation_role: userData.organisation_role,
+        phone: userData.phone,
       },
       config.jwt.access_token_secret as Secret,
       config.jwt.access_token_expires_in as string
     );
 
     return {
-      accessToken: newAccessToken,
+      accessToken,
     };
   } catch (err) {
     throw new AppError(status.UNAUTHORIZED, "Invalid refresh token");
   }
+};
+
+interface ChangePasswordPayload {
+  id: string;     
+  oldPassword: string; 
+  newPassword: string; 
+}
+
+const changePassword = async (payload: ChangePasswordPayload) => {
+  const { id, oldPassword, newPassword } = payload;
+
+  // Step 1: Find user by id
+  const user = await prisma.user.findUnique({ where: { id } });
+
+  if (!user) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+
+  // Step 2: Verify old password
+  const isCorrectPassword = await bcrypt.compare(oldPassword, user.password);
+  if (!isCorrectPassword) {
+    throw new AppError(status.UNAUTHORIZED, "Old password is incorrect");
+  }
+
+  // Step 3: Hash new password
+  const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+  // Step 4: Update password in database
+  await prisma.user.update({
+    where: { id },
+    data: { password: hashedNewPassword },
+  });
+
+  return { message: "Password changed successfully" };
 };
 
 export const UserService = {
@@ -224,5 +254,6 @@ export const UserService = {
   loginUser,
   resendOtp,
   refreshAccessToken,
-  verifyOtp
+  verifyOtp,
+  changePassword
 };

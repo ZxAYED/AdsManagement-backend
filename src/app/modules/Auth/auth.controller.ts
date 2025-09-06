@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { Request, RequestHandler } from "express";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import status from "http-status";
@@ -34,13 +34,30 @@ const verifyOtp: RequestHandler = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const changePassword: RequestHandler = catchAsync(async (req:Request & {user?:any}, res) => {
+
+  const payload={
+    ...req.body, 
+    id:req.user?.id
+  }
+
+
+  const result = await UserService.changePassword(payload);
+
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Password changed successfully.",
+    data: result,
+  });
+});
 
 const loginUser: RequestHandler = catchAsync(async (req, res) => {
   const result = await UserService.loginUser(req.body);
   const { refreshToken, ...others } = result;
 
   res.cookie("refreshToken", refreshToken, {
-    secure: process.env.NODE_ENV === "production", // HTTPS হলে true
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
   });
 
@@ -53,7 +70,7 @@ const loginUser: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const refreshToken: RequestHandler = catchAsync(async (req, res) => {
-  const refreshToken = req.cookies.refreshToken; // cookie থেকে নিচ্ছি
+  const refreshToken = req.cookies.refreshToken; 
   console.log({ refreshToken });
 
   const result = await UserService.refreshAccessToken(refreshToken);
@@ -71,5 +88,6 @@ export const UserController = {
   loginUser,
   refreshToken,
   resendOtp,
-  verifyOtp
+  verifyOtp,
+  changePassword
 };
