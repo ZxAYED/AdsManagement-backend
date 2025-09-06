@@ -4,7 +4,7 @@ import prisma from "../../../shared/prisma";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 
 
-const UserSearchableFields: any = []
+const UserSearchableFields: any = ["first_name", "last_name", "email", "phone"];
 const getAllUsers = async (options: any) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(options);
@@ -24,6 +24,11 @@ const getAllUsers = async (options: any) => {
     },
     select: {
       id: true,
+      organisation_role: true,
+      role: true,
+      first_name: true,
+      last_name: true,
+      phone: true,
       email: true,
     },
   });
@@ -44,7 +49,22 @@ const getAllUsers = async (options: any) => {
 const myProfileInfo = async (id: string) => {
   const result = await prisma.user.findUnique({
     where: { id },
-  });
+    select: {
+      id: true,
+      first_name: true,
+      last_name: true,
+      email: true,
+      phone: true,
+      organisation_name: true,
+      role: true,
+      organisation_role: true,
+      is_verified: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  },
+  
+);
 
   return result;
 };

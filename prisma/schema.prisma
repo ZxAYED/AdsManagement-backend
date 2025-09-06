@@ -26,8 +26,8 @@ model User {
   password_reset_otp     String?
   password_reset_expires DateTime?
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   status USER_STATUS @default(active)
 }
