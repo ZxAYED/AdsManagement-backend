@@ -10,7 +10,7 @@ const createUser: RequestHandler = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
-    message: "User Registration Successfuly.",
+    message: "User Registration Successfuly. Please verify your email.",
     data: result,
   });
 });
@@ -83,11 +83,40 @@ const refreshToken: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
+
+const requestPasswordReset: RequestHandler = catchAsync(async (req, res) => {
+  const result = await UserService.requestPasswordReset(req.body.email);
+
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Password reset OTP sent successfully.",
+    data: result,
+  });
+});
+const resetPassword: RequestHandler = catchAsync(async (req, res) => {
+  const result = await UserService.resetPassword(req.body);
+
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Password reset successfully.",
+    data: result,
+  });
+});
+
+
+
+
+
+
 export const UserController = {
   createUser,
   loginUser,
   refreshToken,
   resendOtp,
   verifyOtp,
-  changePassword
+  changePassword,
+  requestPasswordReset,
+  resetPassword
 };

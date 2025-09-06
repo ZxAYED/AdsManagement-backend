@@ -10,6 +10,8 @@ router.post("/resend-otp", UserController.resendOtp);
 router.post("/verify-otp", UserController.verifyOtp);
 router.post("/login", UserController.loginUser);
 router.post("/refresh-token", UserController.refreshToken);
+router.post("/reset-password", UserController.resetPassword);
+router.post("/request-reset-password", UserController.requestPasswordReset);
 router.post(
   "/change-password",
   RoleValidation(USER_ROLE.customer, USER_ROLE.admin),

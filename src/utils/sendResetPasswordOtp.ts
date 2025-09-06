@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-export const sendResetPasswordOtp = async (to: string, otp: string) => {
+export const sendPasswordResetOtp = async (to: string, otp: string) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -10,19 +10,19 @@ export const sendResetPasswordOtp = async (to: string, otp: string) => {
   });
 
   await transporter.sendMail({
-    from: `"UUING Courier" <${process.env.SMTP_USER}>`,
+    from: `"SCNE Ads" <${process.env.SMTP_USER}>`,
     to,
-    subject: "UUING Courier - Reset Password OTP Verification",
+    subject: "SCNE Ads - Password Reset OTP",
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OTP Verification</title>
+  <title>Password Reset OTP</title>
   <style>
     body {
       font-family: 'Inter', Arial, sans-serif;
-      background-color: #f3f4f6;
+      background-color: #f0f4f8;
       margin: 0;
       padding: 20px;
     }
@@ -30,15 +30,15 @@ export const sendResetPasswordOtp = async (to: string, otp: string) => {
     .container {
       max-width: 600px;
       margin: auto;
-      background: #fff;
+      background: #ffffff;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-      border: 1px solid #e5e7eb;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
     }
 
     .header {
-      background: linear-gradient(135deg, #f97316, #ea580c);
+      background: linear-gradient(135deg, #0ea5e9, #3b82f6);
       text-align: center;
       padding: 35px 20px;
       color: white;
@@ -75,8 +75,8 @@ export const sendResetPasswordOtp = async (to: string, otp: string) => {
     }
 
     .otp-box {
-      background: #fef3c7;
-      border: 2px solid #f59e0b;
+      background: #e0f2fe;
+      border: 2px solid #3b82f6;
       border-radius: 12px;
       padding: 25px 20px;
       display: inline-block;
@@ -86,21 +86,21 @@ export const sendResetPasswordOtp = async (to: string, otp: string) => {
     .otp-label {
       font-size: 13px;
       font-weight: 600;
-      color: #92400e;
+      color: #1e3a8a;
       margin-bottom: 8px;
     }
 
     .otp-code {
       font-size: 36px;
       font-weight: 700;
-      color: #ea580c;
+      color: #2563eb;
       letter-spacing: 6px;
       font-family: monospace;
     }
 
     .timer {
-      background: #e0f2fe;
-      border: 1px solid #38bdf8;
+      background: #eff6ff;
+      border: 1px solid #3b82f6;
       border-radius: 10px;
       padding: 12px 18px;
       margin: 20px 0;
@@ -110,12 +110,12 @@ export const sendResetPasswordOtp = async (to: string, otp: string) => {
     .timer-text {
       font-size: 13px;
       font-weight: 600;
-      color: #075985;
+      color: #1e40af;
     }
 
     .security {
-      background: #fff7ed;
-      border: 1px solid #fdba74;
+      background: #f0f9ff;
+      border: 1px solid #38bdf8;
       border-radius: 10px;
       padding: 16px;
       margin: 25px 0;
@@ -123,7 +123,7 @@ export const sendResetPasswordOtp = async (to: string, otp: string) => {
 
     .security p {
       font-size: 13px;
-      color: #9a3412;
+      color: #1e3a8a;
       margin: 0;
       line-height: 1.5;
     }
@@ -157,14 +157,14 @@ export const sendResetPasswordOtp = async (to: string, otp: string) => {
   <div class="container">
     <div class="header">
       <div style="font-size:40px;">🔒</div>
-      <h1>UUING Courier</h1>
-      <p>Secure & Reliable Delivery</p>
+      <h1>SCNE Ads</h1>
+      <p>Digital Billboard Advertising Platform</p>
     </div>
 
     <div class="content">
-      <h2 class="welcome-text">Reset Your Password</h2>
+      <h2 class="welcome-text">Password Reset OTP</h2>
       <p class="description">
-        To reset your password, please use the following one-time password (OTP) below.
+        You requested to reset your SCNE Ads account password. Use the OTP below to proceed.
       </p>
 
       <div class="otp-box">
@@ -183,7 +183,7 @@ export const sendResetPasswordOtp = async (to: string, otp: string) => {
 
     <div class="footer">
       <p>If you didn’t request a password reset, please ignore this email.</p>
-      <p class="company">© ${new Date().getFullYear()} UUING Courier. All Rights Reserved.</p>
+      <p class="company">© ${new Date().getFullYear()} SCNE Ads. All Rights Reserved.</p>
     </div>
   </div>
 </body>
