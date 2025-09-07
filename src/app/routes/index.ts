@@ -3,6 +3,7 @@ import express from "express";
 import { AuthRoutes } from "../modules/Auth/auth.route";
 import { UserDataRoutes } from "../modules/User/user.route";
 import { BannerRoutes } from "../modules/banner/banner.routes";
+import { ScreenRoutes } from "../modules/Screen/Screen.routes";
 
 
 
@@ -22,6 +23,10 @@ const moduleRoutes = [
   {
     path: "/banner",
     route: BannerRoutes,
+  },
+  {
+    path: "/screen",
+    route: ScreenRoutes,
   },
   
 ];
