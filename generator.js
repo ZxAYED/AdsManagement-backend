@@ -154,19 +154,19 @@ const getAll${capitalizeFirstLetter(moduleName)}FromDB = async (query: any) => {
 };
 
 const getSingle${capitalizeFirstLetter(moduleName)}FromDB = async (id: string) => {
-  return prisma.${moduleName}.findUnique({ where: { id } });
+  return await prisma.${moduleName}.findUnique({ where: { id } });
 };
 
 const post${capitalizeFirstLetter(moduleName)}IntoDB = async (data: any) => {
-  return prisma.${moduleName}.create({ data });
+  return await prisma.${moduleName}.create({ data });
 };
 
 const update${capitalizeFirstLetter(moduleName)}IntoDB = async ({ id, ...data }: any) => {
-  return prisma.${moduleName}.update({ where: { id }, data });
+  return await prisma.${moduleName}.update({ where: { id }, data });
 };
 
 const delete${capitalizeFirstLetter(moduleName)}FromDB = async (id: string) => {
-  return prisma.${moduleName}.delete({ where: { id } });
+  return await prisma.${moduleName}.delete({ where: { id } });
 };
 
 export const ${capitalizeFirstLetter(moduleName)}Service = {

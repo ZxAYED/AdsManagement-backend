@@ -56,14 +56,17 @@ model Screen {
   screen_size  String
   description  String
   resolution   String
-  lat          String
-  lng          String
+  lat          String?
+  lng          String?
   img_url      String
   price        Float
   duration     String
   availability SCREEN_AVAILABILITY
   status       SCREEN_STATUS
   location     String
+  isDeleted   Boolean             @default(false)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   admin        User                @relation("UserScreens", fields: [adminId], references: [id])
   bundles      Bundle[]            @relation("BundleScreens")
 }
