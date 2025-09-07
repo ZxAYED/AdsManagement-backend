@@ -35,7 +35,7 @@ const router = express.Router();
 router.get("/", ${capitalizeFirstLetter(moduleName)}Controller.getAll);
 router.get("/:id", ${capitalizeFirstLetter(moduleName)}Controller.getById);
 router.post("/", ${capitalizeFirstLetter(moduleName)}Controller.create);
-router.put("/:id", ${capitalizeFirstLetter(moduleName)}Controller.update);
+router.patch("/:id", ${capitalizeFirstLetter(moduleName)}Controller.update);
 router.delete("/:id", ${capitalizeFirstLetter(moduleName)}Controller.remove);
 
 export const ${capitalizeFirstLetter(moduleName)}Routes = router;

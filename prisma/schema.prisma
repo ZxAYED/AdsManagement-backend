@@ -30,6 +30,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   status USER_STATUS @default(active)
+  Banner Banner[]
 }
 
 enum USER_STATUS {
@@ -88,6 +89,14 @@ model Bundle {
   status      BUNDLE_STATUS
   location    String
   admin       User          @relation("UserBundles", fields: [adminId], references: [id])
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  img_url   String
+  adminId   String
+  admin     User     @relation(fields: [adminId], references: [id])
+
 }
 
 enum BUNDLE_STATUS {
