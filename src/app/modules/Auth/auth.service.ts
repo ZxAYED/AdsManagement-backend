@@ -22,7 +22,7 @@ const createUser = async (payload: User) => {
   // Step 2: Hash password
   const hashPassword = await bcrypt.hash(payload.password, 12);
 
-  // Step 3: Generate OTP (4 digits) & expiry (e.g., 10 minutes)
+  // Step 3: Generate OTP (4 digits) & expiry ( 5 minutes)
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
   const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
@@ -39,7 +39,6 @@ const createUser = async (payload: User) => {
 
   console.log("📨 OTP generated:", otp);
 
-  // // Step 5: Save user (exclude OTP in response)
   const result = await prisma.user.create({
     data: userData,
     select: {

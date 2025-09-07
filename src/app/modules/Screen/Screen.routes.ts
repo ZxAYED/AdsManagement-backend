@@ -7,7 +7,6 @@ import { USER_ROLE } from "@prisma/client";
 
 const router = express.Router();
 
-// My screens route should be before "/:id"
 router.get("/my-screens", RoleValidation(USER_ROLE.admin), ScreenController.getMySelfBanners);
 
 router.get("/", ScreenController.getAll);
