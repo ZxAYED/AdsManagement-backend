@@ -3,26 +3,39 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id                String           @id @default(uuid())
+  id                String            @id @default(uuid())
   first_name        String
   last_name         String
   phone             String
-  email             String           @unique
+  email             String            @unique
   password          String
   organisation_name String
   role              USER_ROLE
   organisation_role ORGANISATION_ROLE
-  screens           Screen[]         @relation("UserScreens")
-  bundles           Bundle[]         @relation("UserBundles")
-  otp               String?          
-  otp_expires_at    DateTime?       
-  is_verified       Boolean          @default(false)
+  screens           Screen[]          @relation("UserScreens")
+  bundles           Bundle[]          @relation("UserBundles")
+  otp               String?
+  otp_expires_at    DateTime?
+  is_verified       Boolean           @default(false)
+
+  password_reset_otp     String?
+  password_reset_expires DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status USER_STATUS @default(active)
+  Banner Banner[]
+}
+
+enum USER_STATUS {
+  active
+  blocked
 }
 
 enum USER_ROLE {
@@ -36,27 +49,24 @@ enum ORGANISATION_ROLE {
 }
 
 model Screen {
-  id          String         @id @default(uuid())
-  adminId     String
-  slug        String
-  screen_name String
-  screen_size String
-  description String
-  resolution String
-  lat         String
-  lng         String
-  img_url     String
-  price       Float
-  duration    String
+  id           String              @id @default(uuid())
+  adminId      String
+  slug         String
+  screen_name  String
+  screen_size  String
+  description  String
+  resolution   String
+  lat          String
+  lng          String
+  img_url      String
+  price        Float
+  duration     String
   availability SCREEN_AVAILABILITY
-  status      SCREEN_STATUS
-  location    String
-  admin       User           @relation("UserScreens", fields: [adminId], references: [id])
-  bundles     Bundle[]       @relation("BundleScreens")
-
+  status       SCREEN_STATUS
+  location     String
+  admin        User                @relation("UserScreens", fields: [adminId], references: [id])
+  bundles      Bundle[]            @relation("BundleScreens")
 }
-
-
 
 enum SCREEN_AVAILABILITY {
   available
@@ -67,6 +77,7 @@ enum SCREEN_STATUS {
   active
   occupied
 }
+
 model Bundle {
   id          String        @id @default(uuid())
   adminId     String
@@ -80,8 +91,15 @@ model Bundle {
   admin       User          @relation("UserBundles", fields: [adminId], references: [id])
 }
 
+model Banner {
+  id        String   @id @default(uuid())
+  img_url   String
+  adminId   String
+  admin     User     @relation(fields: [adminId], references: [id])
+
+}
+
 enum BUNDLE_STATUS {
   ongoing
   expired
 }
-

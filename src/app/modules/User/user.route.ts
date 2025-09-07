@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/all-users",  RoleValidation( USER_ROLE.admin),
  UserDataController.getAllUsers);
 router.get(
-  "/my-profile-info",
+  "/me",
   RoleValidation(USER_ROLE.customer, USER_ROLE.admin),
   UserDataController.myProfileInfo
 );

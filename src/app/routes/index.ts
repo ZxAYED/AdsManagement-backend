@@ -1,10 +1,14 @@
+
 import express from "express";
 import { AuthRoutes } from "../modules/Auth/auth.route";
 import { UserDataRoutes } from "../modules/User/user.route";
+import { BannerRoutes } from "../modules/banner/banner.routes";
 
 
 
 const router = express.Router();
+
+
 
 const moduleRoutes = [
   {
@@ -14,6 +18,10 @@ const moduleRoutes = [
   {
     path: "/user",
     route: UserDataRoutes,
+  },
+  {
+    path: "/banner",
+    route: BannerRoutes,
   },
   
 ];
