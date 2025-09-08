@@ -17,8 +17,6 @@ model User {
   organisation_name String
   role              USER_ROLE
   organisation_role ORGANISATION_ROLE
-  screens           Screen[]          @relation("UserScreens")
-  bundles           Bundle[]          @relation("UserBundles")
   otp               String?
   otp_expires_at    DateTime?
   is_verified       Boolean           @default(false)
@@ -31,6 +29,8 @@ model User {
 
   status USER_STATUS @default(active)
   Banner Banner[]
+  Screen Screen[]
+  Bundle Bundle[]
 }
 
 enum USER_STATUS {
@@ -64,11 +64,11 @@ model Screen {
   availability SCREEN_AVAILABILITY
   status       SCREEN_STATUS
   location     String
-  isDeleted   Boolean             @default(false)
+  isDeleted    Boolean             @default(false)
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
-  admin        User                @relation("UserScreens", fields: [adminId], references: [id])
-  bundles      Bundle[]            @relation("BundleScreens")
+  admin        User                @relation(fields: [adminId], references: [id])
+  bundles      Bundle[]            @relation("BundleScreens") // Ensure both models have the same relation name
 }
 
 enum SCREEN_AVAILABILITY {
@@ -85,21 +85,20 @@ model Bundle {
   id          String        @id @default(uuid())
   adminId     String
   bundle_name String
-  screens     Screen[]      @relation("BundleScreens")
+  screens     Screen[]      @relation("BundleScreens") // Corrected relation name
   img_url     String
   price       Float
   duration    String
   status      BUNDLE_STATUS
   location    String
-  admin       User          @relation("UserBundles", fields: [adminId], references: [id])
+  admin       User          @relation(fields: [adminId], references: [id])
 }
 
 model Banner {
-  id        String   @id @default(uuid())
-  img_url   String
-  adminId   String
-  admin     User     @relation(fields: [adminId], references: [id])
-
+  id      String @id @default(uuid())
+  img_url String
+  adminId String
+  admin   User   @relation(fields: [adminId], references: [id])
 }
 
 enum BUNDLE_STATUS {

@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "public"."USER_STATUS" AS ENUM ('active', 'blocked');
+
+-- CreateEnum
 CREATE TYPE "public"."USER_ROLE" AS ENUM ('customer', 'admin');
 
 -- CreateEnum
@@ -24,6 +27,14 @@ CREATE TABLE "public"."User" (
     "organisation_name" TEXT NOT NULL,
     "role" "public"."USER_ROLE" NOT NULL,
     "organisation_role" "public"."ORGANISATION_ROLE" NOT NULL,
+    "otp" TEXT,
+    "otp_expires_at" TIMESTAMP(3),
+    "is_verified" BOOLEAN NOT NULL DEFAULT false,
+    "password_reset_otp" TEXT,
+    "password_reset_expires" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "status" "public"."USER_STATUS" NOT NULL DEFAULT 'active',
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -37,14 +48,17 @@ CREATE TABLE "public"."Screen" (
     "screen_size" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "resolution" TEXT NOT NULL,
-    "lat" TEXT NOT NULL,
-    "lng" TEXT NOT NULL,
+    "lat" TEXT,
+    "lng" TEXT,
     "img_url" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "duration" TEXT NOT NULL,
     "availability" "public"."SCREEN_AVAILABILITY" NOT NULL,
     "status" "public"."SCREEN_STATUS" NOT NULL,
     "location" TEXT NOT NULL,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Screen_pkey" PRIMARY KEY ("id")
 );
@@ -61,6 +75,15 @@ CREATE TABLE "public"."Bundle" (
     "location" TEXT NOT NULL,
 
     CONSTRAINT "Bundle_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Banner" (
+    "id" TEXT NOT NULL,
+    "img_url" TEXT NOT NULL,
+    "adminId" TEXT NOT NULL,
+
+    CONSTRAINT "Banner_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -82,6 +105,9 @@ ALTER TABLE "public"."Screen" ADD CONSTRAINT "Screen_adminId_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "public"."Bundle" ADD CONSTRAINT "Bundle_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Banner" ADD CONSTRAINT "Banner_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."_BundleScreens" ADD CONSTRAINT "_BundleScreens_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."Bundle"("id") ON DELETE CASCADE ON UPDATE CASCADE;
