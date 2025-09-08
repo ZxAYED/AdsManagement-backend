@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "public"."Screen" ALTER COLUMN "lat" DROP NOT NULL,
-ALTER COLUMN "lng" DROP NOT NULL;
