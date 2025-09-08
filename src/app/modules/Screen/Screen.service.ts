@@ -14,9 +14,9 @@ const getAllScreenFromDB = async (query: any) => {
 
   const whereConditions = buildDynamicFilters(query, ScreenSearchableFields);
 
-  const total = await prisma.screen.count({ where: whereConditions });
+  const total = await prisma.screen.count({ where: whereConditions});
   const result = await prisma.screen.findMany({
-    where: whereConditions,
+    where: {...whereConditions, isDeleted:false},
     skip,
     take: limit,
     orderBy: { [sortBy]: sortOrder },
@@ -31,40 +31,15 @@ const getAllScreenFromDB = async (query: any) => {
 
   return { data: result, meta };
 };
-const getMySelfBanners = async (query: any, adminId: string) => {
 
-  console.log(adminId)
-
-  const { page, limit, skip, sortBy, sortOrder } =
-    paginationHelper.calculatePagination(query);
-
-  const whereConditions = buildDynamicFilters(query, ScreenSearchableFields);
-
-  const total = await prisma.screen.count({ where: whereConditions });
-  const result = await prisma.screen.findMany({
-    where: {...whereConditions, adminId},
-    skip,
-    take: limit,
-    orderBy: { [sortBy]: sortOrder },
-  });
-
-  const meta = {
-    page,
-    limit,
-    total,
-    totalPages: Math.ceil(total / limit),
-  };
-
-  return { data: result, meta };
-};
 
 const getSingleScreenFromDB = async (id: string) => {
-  const isScreenExist = await prisma.screen.findUnique({ where: { id } });
+  const isScreenExist = await prisma.screen.findFirst({ where: { id:id, isDeleted:false } });
 
   if (!isScreenExist) {
     throw new AppError(status.NOT_FOUND,"Screen not found");
   }
-  return await prisma.screen.findUnique({ where: { id } });
+  return isScreenExist
 };
 
 const postScreenIntoDB = async (data: Screen) => {
@@ -83,7 +58,14 @@ const updateScreenIntoDB = async ({ id, ...data }: any) => {
 };
 
 const deleteScreenFromDB = async (id: string) => {
-  return await prisma.screen.delete({ where: { id } });
+
+  const isScreenExist = await prisma.screen.findFirst({ where: { id, isDeleted:false } });
+
+  if (!isScreenExist) {
+    throw new AppError(status.NOT_FOUND,"Screen not found");
+  }
+
+  return await prisma.screen.update({ where: { id }, data: { isDeleted: true } });
 };
 
 export const ScreenService = {
@@ -92,5 +74,4 @@ export const ScreenService = {
   postScreenIntoDB,
   updateScreenIntoDB,
   deleteScreenFromDB,
-  getMySelfBanners
 };
