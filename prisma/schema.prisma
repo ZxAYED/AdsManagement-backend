@@ -29,7 +29,6 @@ model User {
 
   status USER_STATUS @default(active)
   Banner Banner[]
-  Screen Screen[]
   Bundle Bundle[]
 }
 
@@ -50,14 +49,13 @@ enum ORGANISATION_ROLE {
 
 model Screen {
   id           String              @id @default(uuid())
-  adminId      String
-  slug         String
+  slug         String              @unique
   screen_name  String
   screen_size  String
   description  String
   resolution   String
-  lat          String?
-  lng          String?
+  lat          String
+  lng          String
   img_url      String
   price        Float
   duration     String
@@ -67,7 +65,6 @@ model Screen {
   isDeleted    Boolean             @default(false)
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
-  admin        User                @relation(fields: [adminId], references: [id])
   bundles      Bundle[]            @relation("BundleScreens")
 }
 
@@ -85,6 +82,8 @@ model Bundle {
   id          String        @id @default(uuid())
   adminId     String
   bundle_name String
+  slug        String        @unique
+  isDeleted   Boolean       @default(false)
   screens     Screen[]      @relation("BundleScreens")
   img_url     String
   price       Float

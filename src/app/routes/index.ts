@@ -1,9 +1,10 @@
 
 import express from "express";
 import { AuthRoutes } from "../modules/Auth/auth.route";
-import { UserDataRoutes } from "../modules/User/user.route";
 import { BannerRoutes } from "../modules/banner/banner.routes";
+import { BundleRoutes } from "../modules/Bundle/Bundle.routes";
 import { ScreenRoutes } from "../modules/Screen/Screen.routes";
+import { UserDataRoutes } from "../modules/User/user.route";
 
 
 
@@ -28,7 +29,11 @@ const moduleRoutes = [
     path: "/screen",
     route: ScreenRoutes,
   },
-  
+  {
+    path: "/bundle",
+    route: BundleRoutes,
+  },
+
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
