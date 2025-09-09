@@ -67,6 +67,8 @@ CREATE TABLE "public"."Bundle" (
     "id" TEXT NOT NULL,
     "adminId" TEXT NOT NULL,
     "bundle_name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "img_url" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "duration" TEXT NOT NULL,
@@ -95,6 +97,12 @@ CREATE TABLE "public"."_BundleScreens" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Screen_slug_key" ON "public"."Screen"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Bundle_slug_key" ON "public"."Bundle"("slug");
 
 -- CreateIndex
 CREATE INDEX "_BundleScreens_B_index" ON "public"."_BundleScreens"("B");
