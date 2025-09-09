@@ -58,7 +58,7 @@ const postBundleIntoDB = async (data: {
   img_url: string;
   slug: string;
 }) => {
-  console.log({ data });
+  // console.log({ data });
 
   // 1️⃣ Check if bundle with same name exists
   const existingBundle = await prisma.bundle.findFirst({
