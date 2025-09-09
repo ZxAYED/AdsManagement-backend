@@ -18,6 +18,7 @@ const getAllBundleFromDB = async (query: any) => {
     skip,
     take: limit,
     orderBy: { [sortBy]: sortOrder },
+    include: { screens: true },
   });
 
   const meta = {
