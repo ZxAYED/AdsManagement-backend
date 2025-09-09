@@ -83,13 +83,14 @@ const postBundleIntoDB = async (data: {
 
 
 const updateBundleIntoDB = async ({ id, ...data }: Bundle) => {
+
   const isBundleExist = await prisma.bundle.findFirst({ where: { id } });
 
   if (!isBundleExist) {
     throw new AppError(status.NOT_FOUND, "Bundle not found");
   }
 
-  return await prisma.bundle.update({ where: { id }, data });
+  return await prisma.bundle.update({ where: { slug: id }, data });
 };
 
 const deleteBundleFromDB = async (id: string) => {

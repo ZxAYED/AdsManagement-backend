@@ -80,51 +80,52 @@ const create = catchAsync(async (req: Request & { user?: any }, res: Response) =
 
 const update = catchAsync(async (req: Request, res: Response) => {
 
-  async (req: Request, res: Response) => {
-    let payload;
+
+  let payload;
 
 
-    if (req.body?.data) {
-      try {
-        payload = JSON.parse(req.body.data);
-      } catch (err) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid JSON format in 'data'",
-        });
-      }
-    } else {
-      payload = req.body;
+  if (req.body?.data) {
+    try {
+      payload = JSON.parse(req.body.data);
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid JSON format in 'data'",
+      });
     }
-
-
-
-
-    if (req.file) {
-      try {
-        const ImageName = `Image-${Date.now()}`;
-        const imageLink = await uploadImageToSupabase(req.file.path, ImageName);
-
-        payload.img_url = imageLink;
-
-        fs.unlinkSync(req.file.path);
-      } catch (err) {
-        console.error("❌ Upload error:", err);
-        return res
-          .status(500)
-          .json({ success: false, message: "Image upload failed" });
-      }
-    }
-
-
-    const result = await BundleService.updateBundleIntoDB(payload);
-    sendResponse(res, {
-      statusCode: status.OK,
-      success: true,
-      message: "Bundle updated successfully",
-      data: result,
-    });
+  } else {
+    payload = req.body;
   }
+
+
+
+
+  if (req.file) {
+    try {
+      const ImageName = `Image-${Date.now()}`;
+      const imageLink = await uploadImageToSupabase(req.file.path, ImageName);
+
+      payload.img_url = imageLink;
+
+
+      fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error("❌ Upload error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Image upload failed" });
+    }
+  }
+  console.log("🚀 ~ payload:", payload)
+
+  const result = await BundleService.updateBundleIntoDB(payload);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Bundle updated successfully",
+    data: result,
+  });
+
 
 });
 
