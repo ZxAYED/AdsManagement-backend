@@ -49,7 +49,7 @@ enum ORGANISATION_ROLE {
 
 model Screen {
   id           String              @id @default(uuid())
-  slug         String
+  slug         String              @unique
   screen_name  String
   screen_size  String
   description  String
@@ -82,6 +82,8 @@ model Bundle {
   id          String        @id @default(uuid())
   adminId     String
   bundle_name String
+  slug        String        @unique
+  isDeleted   Boolean       @default(false)
   screens     Screen[]      @relation("BundleScreens")
   img_url     String
   price       Float

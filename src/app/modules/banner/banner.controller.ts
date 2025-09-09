@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
 
+import fs from "fs";
 import status from "http-status";
-import { BannerService } from "./banner.service";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import { uploadImageToSupabase } from "../../middlewares/uploadImageToSupabase";
-import fs from "fs";
+import { BannerService } from "./banner.service";
+
+
 const getAll = catchAsync(async (req: Request, res: Response) => {
   const result = await BannerService.getAllBannerFromDB();
   sendResponse(res, {

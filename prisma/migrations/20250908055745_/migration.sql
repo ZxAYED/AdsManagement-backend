@@ -42,14 +42,13 @@ CREATE TABLE "public"."User" (
 -- CreateTable
 CREATE TABLE "public"."Screen" (
     "id" TEXT NOT NULL,
-    "adminId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "screen_name" TEXT NOT NULL,
     "screen_size" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "resolution" TEXT NOT NULL,
-    "lat" TEXT,
-    "lng" TEXT,
+    "lat" TEXT NOT NULL,
+    "lng" TEXT NOT NULL,
     "img_url" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "duration" TEXT NOT NULL,
@@ -99,9 +98,6 @@ CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
 
 -- CreateIndex
 CREATE INDEX "_BundleScreens_B_index" ON "public"."_BundleScreens"("B");
-
--- AddForeignKey
-ALTER TABLE "public"."Screen" ADD CONSTRAINT "Screen_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Bundle" ADD CONSTRAINT "Bundle_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
