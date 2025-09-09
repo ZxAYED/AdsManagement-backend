@@ -148,10 +148,25 @@ const remove = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getAvailableBundlesFromDB = catchAsync(async (req: Request, res: Response) => {
+  // console.log("Fetching available bundles from DB with query:", req.query);
+  const result = await BundleService.getAvailableBundlesFromDB(req.query);
+  sendResponse(res, { 
+    statusCode: status.OK,
+    success: true,
+    message: "Available bundles fetched successfully",
+    data: result
+  });
+});
+
+
+
 export const BundleController = {
   getAll,
   getBySlug,
   create,
   update,
   remove,
+  getAvailableBundlesFromDB
 };

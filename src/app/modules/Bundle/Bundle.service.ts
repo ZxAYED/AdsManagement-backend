@@ -110,7 +110,6 @@ const postBundleIntoDB = async (data: {
 };
 
 const updateBundleIntoDB = async (data: Partial<Bundle>) => {
-  // console.log(data);
 
   if (!data.slug) {
     throw new AppError(status.BAD_REQUEST, "Bundle slug is required for update");
@@ -169,10 +168,63 @@ const deleteBundleFromDB = async (slug: string) => {
   });
 };
 
+
+const getAvailableBundlesFromDB = async (query: any) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(query);
+
+  const whereConditions = buildDynamicFilters(query, bundleSearchableFields);
+
+  const total = await prisma.bundle.count({
+    where: {
+      ...whereConditions,
+      isDeleted: false,
+      status: "ongoing", 
+      screens: {
+        some: {
+          status: "active",
+          availability: "available",
+          isDeleted: false,
+        },
+      },
+    },
+  });
+
+  const result = await prisma.bundle.findMany({
+    where: {
+      ...whereConditions,
+      isDeleted: false,
+      status: "ongoing",
+      screens: {
+        some: {
+          status: "active",
+          availability: "available",
+          isDeleted: false,
+        },
+      },
+    },
+    skip,
+    take: limit,
+    orderBy: { [sortBy]: sortOrder },
+    include: { screens: true },
+  });
+
+  const meta = {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+  };
+
+  return { data: result, meta };
+};
+
+
 export const BundleService = {
   getAllBundleFromDB,
   getSingleBundleFromDB,
   postBundleIntoDB,
   updateBundleIntoDB,
   deleteBundleFromDB,
+  getAvailableBundlesFromDB
 };
