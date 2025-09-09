@@ -29,7 +29,6 @@ model User {
 
   status USER_STATUS @default(active)
   Banner Banner[]
-  Bundle Bundle[]
 }
 
 enum USER_STATUS {
@@ -80,7 +79,6 @@ enum SCREEN_STATUS {
 
 model Bundle {
   id          String        @id @default(uuid())
-  adminId     String
   bundle_name String
   slug        String        @unique
   isDeleted   Boolean       @default(false)
@@ -90,7 +88,8 @@ model Bundle {
   duration    String
   status      BUNDLE_STATUS
   location    String
-  admin       User          @relation(fields: [adminId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Banner {
