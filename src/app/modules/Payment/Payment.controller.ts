@@ -19,15 +19,20 @@ const getAll = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-const myselfPayments = catchAsync(async (req: Request & { user?: any }, res: Response) => {
-  const result = await paymentService.myselfPayments(req.user?.id as string, req.query);
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Payment list fetched successfully",
-    data: result,
-  });
-});
+const myselfPayments = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    const result = await paymentService.myselfPayments(
+      req.user?.id as string,
+      req.query
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Payment list fetched successfully",
+      data: result,
+    });
+  }
+);
 
 const getById = catchAsync(async (req: Request, res: Response) => {
   const result = await paymentService.getSinglePaymentFromDB(req.params.id);
@@ -57,12 +62,7 @@ const create = catchAsync(
   }
 );
 
-
-
- const stripeWebhook = async (req: Request, res: Response) => {
-  console.log("🚀 Webhook hit!");
-  console.log("Headers:", req.headers);
-  console.log("Body:", req.body);
+const stripeWebhook = async (req: Request, res: Response) => {
 
   const sig = req.headers["stripe-signature"] as string;
   let event: Stripe.Event;
@@ -165,12 +165,10 @@ const create = catchAsync(
   }
 };
 
-
-
 export const PaymentController = {
   getAll,
   getById,
   create,
   stripeWebhook,
-  myselfPayments
+  myselfPayments,
 };
