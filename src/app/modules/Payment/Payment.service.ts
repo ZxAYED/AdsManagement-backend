@@ -66,8 +66,6 @@ const getAllPaymentsFromDB = async (query: any) => {
   return { data: result, meta };
 };
 
-
-
 const myselfPayments = async (userId: string, query: any) => {
   // 1️⃣ Pagination values
   const { page, limit, skip, sortBy, sortOrder } =
@@ -81,7 +79,7 @@ const myselfPayments = async (userId: string, query: any) => {
     ...whereConditions,
     customerId: userId,
     status: { not: "pending" },
-  };    
+  };
   // 4️⃣ Total count
   const total = await prisma.payment.count({ where: whereConditions });
 
@@ -119,8 +117,7 @@ const myselfPayments = async (userId: string, query: any) => {
   };
 
   return { data: result, meta };
-}
-
+};
 
 const getSinglePaymentFromDB = async (id: string) => {
   const payment = await prisma.payment.findUnique({
@@ -147,7 +144,7 @@ const getSinglePaymentFromDB = async (id: string) => {
   }
 
   return payment;
-}
+};
 
 const checkoutBundle = async (data: {
   bundleId: string;
@@ -212,8 +209,8 @@ const checkoutBundle = async (data: {
       },
     ],
     customer_email: user.email,
-    success_url: `http://localhost:5173/payment-success`,
-    cancel_url: `http://localhost:5173/payment-cancel`,
+    success_url: `${process.env.FRONTEND_URL}/payment-success`,
+    cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
     metadata: {
       paymentId: payment.id, // important for webhook
     },
@@ -226,5 +223,5 @@ export const paymentService = {
   getAllPaymentsFromDB,
   getSinglePaymentFromDB,
   checkoutBundle,
-  myselfPayments
+  myselfPayments,
 };
