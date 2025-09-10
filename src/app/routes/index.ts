@@ -5,6 +5,7 @@ import { BannerRoutes } from "../modules/banner/banner.routes";
 import { BundleRoutes } from "../modules/Bundle/Bundle.routes";
 import { ScreenRoutes } from "../modules/Screen/Screen.routes";
 import { UserDataRoutes } from "../modules/User/user.route";
+import { PaymentRoutes } from "../modules/Payment/Payment.routes";
 
 
 
@@ -33,6 +34,10 @@ const moduleRoutes = [
     path: "/bundle",
     route: BundleRoutes,
   },
+  {
+    path:"/payment",
+    route:PaymentRoutes
+  }
 
 ];
 

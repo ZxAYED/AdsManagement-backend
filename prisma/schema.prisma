@@ -27,8 +27,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  status USER_STATUS @default(active)
-  Banner Banner[]
+  status  USER_STATUS @default(active)
+  Banner  Banner[]
+  Payment Payment[]
 }
 
 enum USER_STATUS {
@@ -90,6 +91,7 @@ model Bundle {
   location    String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  Payment     Payment[]
 }
 
 model Banner {
@@ -102,4 +104,23 @@ model Banner {
 enum BUNDLE_STATUS {
   ongoing
   expired
+}
+
+model Payment {
+  id            String         @id @default(uuid())
+  customerId        String
+  user          User           @relation(fields: [customerId], references: [id])
+  bundleId      String
+  bundle        Bundle         @relation(fields: [bundleId], references: [id])
+  amount        Float
+  status        PAYMENT_STATUS @default(pending)
+  transactionId String? // from Stripe / Bkash / SSLCommerz
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+enum PAYMENT_STATUS {
+  pending
+  success
+  failed
 }

@@ -6,20 +6,45 @@ import { paginationHelper } from "../../../helpers/paginationHelper";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 
 const bundleSearchableFields = ["slug", "bundle_name"]; // adjust fields
+
+
 const getAllBundleFromDB = async (query: any) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
 
   const whereConditions = buildDynamicFilters(query, bundleSearchableFields);
 
-  const total = await prisma.bundle.count({ where: whereConditions });
-  const result = await prisma.bundle.findMany({
+  const total = await prisma.bundle.count({
+    where: { ...whereConditions, isDeleted: false },
+  });
+
+  // Step 1: Get bundles (excluding Payment data)
+  const bundles = await prisma.bundle.findMany({
     where: { ...whereConditions, isDeleted: false },
     skip,
     take: limit,
     orderBy: { [sortBy]: sortOrder },
-    include: { screens: true },
+    include: {
+      screens: true, // include screens relation
+    },
   });
+
+  // Step 2: For each bundle, count only successful payments
+  const bundlesWithBuyCount = await Promise.all(
+    bundles.map(async (bundle) => {
+      const successPaymentCount = await prisma.payment.count({
+        where: {
+          bundleId: bundle.id,
+          status: 'success', // only count successful payments
+        },
+      });
+
+      return {
+        ...bundle,
+        totalNumberOfBuy: successPaymentCount,
+      };
+    })
+  );
 
   const meta = {
     page,
@@ -28,10 +53,32 @@ const getAllBundleFromDB = async (query: any) => {
     totalPages: Math.ceil(total / limit),
   };
 
-  return { data: result, meta };
+  return {
+    data: bundlesWithBuyCount,
+    meta,
+  };
 };
 
+
+
+// const getSingleBundleFromDB = async (slug: string) => {
+//   const isBundleExist = await prisma.bundle.findFirst({
+//     where: { slug: slug, isDeleted: false },
+//   });
+
+//   if (!isBundleExist) {
+//     throw new AppError(status.NOT_FOUND, "Bundle not found");
+//   }
+
+//   return await prisma.bundle.findUnique({
+//     where: { slug },
+//     include: { screens: true },
+//   });
+// };
+
+
 const getSingleBundleFromDB = async (slug: string) => {
+  // Step 1: Check if bundle exists and is not deleted
   const isBundleExist = await prisma.bundle.findFirst({
     where: { slug: slug, isDeleted: false },
   });
@@ -40,10 +87,27 @@ const getSingleBundleFromDB = async (slug: string) => {
     throw new AppError(status.NOT_FOUND, "Bundle not found");
   }
 
-  return await prisma.bundle.findUnique({
+  // Step 2: Get bundle with screens
+  const bundle = await prisma.bundle.findUnique({
     where: { slug },
-    include: { screens: true },
+    include: {
+      screens: true,
+    },
   });
+
+  // Step 3: Count only successful payments for the bundle
+  const successPaymentCount = await prisma.payment.count({
+    where: {
+      bundleId: bundle?.id,
+      status: "success",
+    },
+  });
+
+  // Step 4: Add totalNumberOfBuy field
+  return {
+    ...bundle,
+    totalNumberOfBuy: successPaymentCount,
+  };
 };
 
 
