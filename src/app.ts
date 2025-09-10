@@ -1,13 +1,10 @@
 import cors from "cors";
 import express, { Application, NextFunction, Request, Response } from "express";
-
 import cookieParser from "cookie-parser";
 import status from "http-status";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import router from "./app/routes";
-import { paymentService } from "./app/modules/Payment/Payment.service";
 import { PaymentController } from "./app/modules/Payment/Payment.controller";
-// import { ParcelController } from "./app/modules/Parcel/parcel.controller";
 
 const app: Application = express();
 
