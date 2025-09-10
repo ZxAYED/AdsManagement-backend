@@ -1,4 +1,3 @@
-
 import express from "express";
 import { AuthRoutes } from "../modules/Auth/auth.route";
 import { BannerRoutes } from "../modules/banner/banner.routes";
@@ -7,11 +6,7 @@ import { ScreenRoutes } from "../modules/Screen/Screen.routes";
 import { UserDataRoutes } from "../modules/User/user.route";
 import { PaymentRoutes } from "../modules/Payment/Payment.routes";
 
-
-
 const router = express.Router();
-
-
 
 const moduleRoutes = [
   {
@@ -35,10 +30,9 @@ const moduleRoutes = [
     route: BundleRoutes,
   },
   {
-    path:"/payment",
-    route:PaymentRoutes
-  }
-
+    path: "/payment",
+    route: PaymentRoutes,
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
