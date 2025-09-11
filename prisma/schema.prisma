@@ -27,9 +27,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  status  USER_STATUS @default(active)
-  Banner  Banner[]
-  Payment Payment[]
+  status       USER_STATUS    @default(active)
+  Banner       Banner[]
+  Payment      Payment[]
+  sentMessages     Message[]      @relation("SentMessages")
+  receivedMessages Message[]      @relation("ReceivedMessages")
+  Notification Notification[]
 }
 
 enum USER_STATUS {
@@ -108,7 +111,7 @@ enum BUNDLE_STATUS {
 
 model Payment {
   id            String         @id @default(uuid())
-  customerId        String
+  customerId    String
   user          User           @relation(fields: [customerId], references: [id])
   bundleId      String
   bundle        Bundle         @relation(fields: [bundleId], references: [id])
@@ -123,4 +126,28 @@ enum PAYMENT_STATUS {
   pending
   success
   failed
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  text       String?
+  fileUrl    String?
+  fileType   String?
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model Notification {
+  id                 String   @id @default(uuid())
+  userId             String
+  notificationType   String
+  notificationDetail String
+  isSeen             Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
