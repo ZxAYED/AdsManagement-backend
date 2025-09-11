@@ -3,6 +3,8 @@ import app from "./app";
 import prisma from "./shared/prisma";
 import { ORGANISATION_ROLE, USER_ROLE } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { setupWebSocket } from "./utils/websocket";
+import config from "./config";
 
 const port = 5000;
 
@@ -42,6 +44,13 @@ async function main() {
   const httpServer: HTTPServer = app.listen(port, () => {
     console.log("🚀 Server is running on port", port);
   });
+
+  const { wss, onlineUsers } = setupWebSocket(
+    httpServer,
+    config.jwt.access_token_secret as string
+  );
+  app.set("wss", wss);
+  app.set("onlineUsers", onlineUsers);
 }
 
 main().catch((err) => {
