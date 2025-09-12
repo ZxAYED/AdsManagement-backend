@@ -27,12 +27,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  status       USER_STATUS    @default(active)
-  Banner       Banner[]
-  Payment      Payment[]
+  status           USER_STATUS    @default(active)
+  Banner           Banner[]
+  Payment          Payment[]
   sentMessages     Message[]      @relation("SentMessages")
   receivedMessages Message[]      @relation("ReceivedMessages")
-  Notification Notification[]
+  Notification     Notification[]
 }
 
 enum USER_STATUS {
@@ -117,7 +117,7 @@ model Payment {
   bundle        Bundle         @relation(fields: [bundleId], references: [id])
   amount        Float
   status        PAYMENT_STATUS @default(pending)
-  transactionId String? // from Stripe / Bkash / SSLCommerz
+  transactionId String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -133,8 +133,9 @@ model Message {
   senderId   String
   receiverId String
   text       String?
-  fileUrl    String?
-  fileType   String?
+  isSeen     Boolean  @default(false)
+  // fileUrl    String?
+  // fileType   String?
   createdAt  DateTime @default(now())
 
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
