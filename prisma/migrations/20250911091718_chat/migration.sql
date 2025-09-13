@@ -16,6 +16,9 @@ CREATE TYPE "public"."SCREEN_STATUS" AS ENUM ('active', 'occupied');
 -- CreateEnum
 CREATE TYPE "public"."BUNDLE_STATUS" AS ENUM ('ongoing', 'expired');
 
+-- CreateEnum
+CREATE TYPE "public"."PAYMENT_STATUS" AS ENUM ('pending', 'success', 'failed');
+
 -- CreateTable
 CREATE TABLE "public"."User" (
     "id" TEXT NOT NULL,
@@ -65,7 +68,6 @@ CREATE TABLE "public"."Screen" (
 -- CreateTable
 CREATE TABLE "public"."Bundle" (
     "id" TEXT NOT NULL,
-    "adminId" TEXT NOT NULL,
     "bundle_name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -74,6 +76,8 @@ CREATE TABLE "public"."Bundle" (
     "duration" TEXT NOT NULL,
     "status" "public"."BUNDLE_STATUS" NOT NULL,
     "location" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Bundle_pkey" PRIMARY KEY ("id")
 );
@@ -85,6 +89,45 @@ CREATE TABLE "public"."Banner" (
     "adminId" TEXT NOT NULL,
 
     CONSTRAINT "Banner_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Payment" (
+    "id" TEXT NOT NULL,
+    "customerId" TEXT NOT NULL,
+    "bundleId" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "status" "public"."PAYMENT_STATUS" NOT NULL DEFAULT 'pending',
+    "transactionId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Message" (
+    "id" TEXT NOT NULL,
+    "senderId" TEXT NOT NULL,
+    "receiverId" TEXT NOT NULL,
+    "text" TEXT,
+    "fileUrl" TEXT,
+    "fileType" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Notification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "notificationType" TEXT NOT NULL,
+    "notificationDetail" TEXT NOT NULL,
+    "isSeen" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -108,10 +151,22 @@ CREATE UNIQUE INDEX "Bundle_slug_key" ON "public"."Bundle"("slug");
 CREATE INDEX "_BundleScreens_B_index" ON "public"."_BundleScreens"("B");
 
 -- AddForeignKey
-ALTER TABLE "public"."Bundle" ADD CONSTRAINT "Bundle_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."Banner" ADD CONSTRAINT "Banner_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Banner" ADD CONSTRAINT "Banner_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."Payment" ADD CONSTRAINT "Payment_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Payment" ADD CONSTRAINT "Payment_bundleId_fkey" FOREIGN KEY ("bundleId") REFERENCES "public"."Bundle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Message" ADD CONSTRAINT "Message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Message" ADD CONSTRAINT "Message_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."_BundleScreens" ADD CONSTRAINT "_BundleScreens_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."Bundle"("id") ON DELETE CASCADE ON UPDATE CASCADE;

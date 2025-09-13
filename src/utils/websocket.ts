@@ -1,13 +1,14 @@
-// websocket.ts
-import WebSocket, { WebSocketServer } from "ws";
-import jwt from "jsonwebtoken";
-import { IncomingMessage } from "http";
 import { PrismaClient } from "@prisma/client";
+import { IncomingMessage } from "http";
+import jwt from "jsonwebtoken";
+import WebSocket, { WebSocketServer } from "ws";
 
 const prisma = new PrismaClient();
 
 interface AuthenticatedWebSocket extends WebSocket {
   userId?: string;
+  name?: string;
+
 }
 
 const onlineUsers = new Map<string, AuthenticatedWebSocket>();
@@ -16,17 +17,25 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
   const wss = new WebSocketServer({ server });
 
   wss.on("connection", (ws: AuthenticatedWebSocket, req: IncomingMessage) => {
-    const url = new URL(req.url!, `http://${req.headers.host}`);
+
+
+    const protocol = (req.socket as any).encrypted ? 'https' : 'http';
+    const url = new URL(req.url!, `${protocol}://${req.headers.host}`);
+
+
     const token = url.searchParams.get("token");
 
-    if (!token) {
-      ws.close(1008, "Token missing");
-      return;
-    }
+
 
     try {
+      if (!token) {
+        ws.close(1008, "Token missing");
+        return;
+      }
+
       const decoded = jwt.verify(token, jwtSecret) as any;
       ws.userId = decoded.id;
+      ws.name = decoded.first_name + ' ' + decoded.last_name;
 
       if (!ws.userId) {
         ws.close(1008, "Invalid token");
@@ -34,7 +43,8 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
       }
 
       onlineUsers.set(ws.userId, ws);
-      console.log(`User ${ws.userId} connected via WebSocket`);
+
+
     } catch (err) {
       ws.close(1008, "Authentication failed");
       return;
@@ -47,78 +57,104 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
       }
     });
 
+
     ws.on('message', async (data) => {
-  try {
-    // Raw incoming data
-    console.log("📩 Raw incoming data:", data.toString());
+      try {
 
-    const msg = JSON.parse(data.toString());
+        const msg = JSON.parse(data.toString());
 
-    console.log("👉 Sender:", ws.userId);
-    console.log("👉 Receiver:", msg.receiverId);
 
-    if (!msg.receiverId || (!msg.text && !msg.fileUrl)) {
-      ws.send(JSON.stringify({ error: 'Invalid message format' }));
-      return;
-    }
+        if (!msg.receiverId) {
+          ws.send(JSON.stringify({ error: 'Invalid message format or Receiver ID missing' }));
+          return;
+        }
 
-    // create message data
-    const messagePayload: any = {
-      senderId: ws.userId,
-      receiverId: msg.receiverId,
-    };
 
-    if (msg.text) messagePayload.text = msg.text;
-    if (msg.fileUrl) messagePayload.fileUrl = msg.fileUrl;
-    if (msg.fileType) messagePayload.fileType = msg.fileType;
+        // Check if the message is a request for message history
+        if (msg.type === "fetch_history") {
 
-    // save message to database
-    const savedMessage = await prisma.message.create({
-      data: messagePayload,
+          const messages = await prisma.message.findMany({
+            where: {
+              OR: [
+                { senderId: ws.userId, receiverId: msg.receiverId },
+                { senderId: msg.receiverId, receiverId: ws.userId },
+              ],
+            },
+            orderBy: {
+              createdAt: 'asc',
+            },
+          });
+
+
+
+          ws.send(JSON.stringify({
+            type: 'fetch_history',
+            data: messages,
+          }));
+          return;
+
+        }
+
+
+        const messagePayload: any = {
+          senderId: ws.userId,
+          receiverId: msg.receiverId,
+          text: msg.text,
+        };
+
+
+        // create message data 
+        // const messagePayload: any = { senderId: ws.userId, receiverId: msg.receiverId, text: msg.text }; 
+        // if (msg.text) messagePayload.text = msg.text; 
+        // if (msg.fileUrl) messagePayload.fileUrl = msg.fileUrl; 
+        // if (msg.fileType) messagePayload.fileType = msg.fileType;
+        // Save the new message to the database
+
+
+        const savedMessage = await prisma.message.create({
+          data: messagePayload,
+        });
+
+        // If the receiver is online, send the new message + notification in real-time
+        const receiverSocket = onlineUsers.get(msg.receiverId);
+        if (receiverSocket && receiverSocket.readyState === WebSocket.OPEN) {
+
+          receiverSocket.send(JSON.stringify({
+            type: 'new_message',
+            data: savedMessage,
+          }));
+          const res = await prisma.notification.create({
+            data: {
+              userId: msg.receiverId,
+              notificationType: 'chat_message',
+
+              notificationDetail: `💬 New message from ${ws.name} : "${msg.text}"`,
+            },
+          });
+
+          receiverSocket.send(JSON.stringify({
+            type: 'new_notification',
+            data: res,
+          }));
+        }
+
+        // Create a notification for the receiver
+
+
+
+        ws.send(JSON.stringify({
+          type: 'message_sent',
+          data: savedMessage,
+        }));
+
+
+      } catch (error) {
+        console.error('❌ WebSocket message error:', error);
+        ws.send(JSON.stringify({ error: 'Internal server error' }));
+      }
     });
-
-    console.log("💾 Message saved in DB:", savedMessage);
-
-    // get the receiver socket
-    const receiverSocket = onlineUsers.get(msg.receiverId);
-    console.log("🎯 Receiver socket found?", !!receiverSocket);
-
-    if (receiverSocket && receiverSocket.readyState === 1) {
-      console.log(`📤 Sending message to receiver ${msg.receiverId}`);
-      receiverSocket.send(JSON.stringify({
-        type: 'new_message',
-        data: savedMessage,
-      }));
-    } else {
-      console.log(`⚠️ Receiver ${msg.receiverId} is offline`);
-    }
-
-    // create notification
-    await prisma.notification.create({
-      data: {
-        userId: msg.receiverId,
-        notificationType: 'chat_message',
-        notificationDetail: `💬 New message from ${ws.userId}: "${msg.text || 'Sent a file'}"`,
-      },
-    });
-
-    // confirmation back to sender
-    ws.send(JSON.stringify({
-      type: 'message_sent',
-      data: savedMessage,
-    }));
-    console.log(`✅ Confirmation sent to sender ${ws.userId}`);
-
-  } catch (error) {
-    console.error('❌ WebSocket message error:', error);
-    ws.send(JSON.stringify({ error: 'Internal server error' }));
-  }
-});
-
-    
-
-
-});
+  });
 
   return { wss, onlineUsers };
 };
+// 
