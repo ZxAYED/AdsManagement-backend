@@ -57,7 +57,7 @@ const create = catchAsync(
 
     try {
       const ImageName = `Image-${Date.now()}-${nanoid(6)}`;
-      const imageLink = await uploadImageToSupabase(req.file.path, ImageName);
+        const imageLink = await uploadImageToSupabase(req.file, ImageName);
       payload.img_url = imageLink;
       fs.unlinkSync(req.file.path);
 
@@ -102,7 +102,7 @@ const update = catchAsync(
     if (req.file) {
       try {
         const ImageName = `Image-${Date.now()}-${nanoid(6)}`;
-        const imageLink = await uploadImageToSupabase(req.file.path, ImageName);
+        const imageLink = await uploadImageToSupabase(req.file, ImageName);
         payload.img_url = imageLink;
         fs.unlinkSync(req.file.path);
       } catch (error) {
