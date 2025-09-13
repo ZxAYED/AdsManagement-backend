@@ -7,7 +7,6 @@ import sendResponse from "../../../shared/sendResponse";
 import { uploadImageToSupabase } from "../../middlewares/uploadImageToSupabase";
 import { BannerService } from "./banner.service";
 
-
 const getAll = catchAsync(async (req: Request, res: Response) => {
   const result = await BannerService.getAllBannerFromDB();
   sendResponse(res, {
@@ -41,10 +40,7 @@ const create = catchAsync(
         // Call the uploadImageToSupabase only if the file exists
 
         const ImageName = `Image-${Date.now()}`;
-        const imageLink = await uploadImageToSupabase(
-          req.file.path as any,
-          ImageName
-        );
+        const imageLink = await uploadImageToSupabase(req.file, ImageName);
 
         // console.log("Image Link .....",imageLink);
         img_url = imageLink;
@@ -73,8 +69,6 @@ const create = catchAsync(
     });
   }
 );
-
-
 
 const remove = catchAsync(async (req: Request, res: Response) => {
   await BannerService.deleteBannerFromDB(req.params.id);

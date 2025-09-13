@@ -50,8 +50,7 @@ const create = catchAsync(
     if (req.file) {
       try {
         const ImageName = `Image-${Date.now()}`;
-        const imageLink = await uploadImageToSupabase(req.file.path, ImageName);
-
+        const imageLink = await uploadImageToSupabase(req.file, ImageName);
         img_url = imageLink;
 
         fs.unlinkSync(req.file.path);
@@ -100,7 +99,7 @@ const update = catchAsync(async (req: Request, res: Response) => {
   if (req.file) {
     try {
       const ImageName = `Image-${Date.now()}`;
-      const imageLink = await uploadImageToSupabase(req.file.path, ImageName);
+        const imageLink = await uploadImageToSupabase(req.file, ImageName);
 
       img_url = imageLink;
 

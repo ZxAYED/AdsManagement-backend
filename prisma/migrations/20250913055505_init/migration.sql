@@ -19,6 +19,12 @@ CREATE TYPE "public"."BUNDLE_STATUS" AS ENUM ('ongoing', 'expired');
 -- CreateEnum
 CREATE TYPE "public"."PAYMENT_STATUS" AS ENUM ('pending', 'success', 'failed');
 
+-- CreateEnum
+CREATE TYPE "public"."CAMPAIGN_TYPE" AS ENUM ('bundle', 'custom');
+
+-- CreateEnum
+CREATE TYPE "public"."CAMPAIGN_STATUS" AS ENUM ('running', 'completed');
+
 -- CreateTable
 CREATE TABLE "public"."User" (
     "id" TEXT NOT NULL,
@@ -111,8 +117,7 @@ CREATE TABLE "public"."Message" (
     "senderId" TEXT NOT NULL,
     "receiverId" TEXT NOT NULL,
     "text" TEXT,
-    "fileUrl" TEXT,
-    "fileType" TEXT,
+    "isSeen" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
@@ -128,6 +133,33 @@ CREATE TABLE "public"."Notification" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Campaign" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "industry" TEXT NOT NULL,
+    "contentUrl" TEXT NOT NULL,
+    "startDate" TIMESTAMP(3) NOT NULL,
+    "endDate" TIMESTAMP(3) NOT NULL,
+    "status" "public"."CAMPAIGN_STATUS" NOT NULL,
+    "type" "public"."CAMPAIGN_TYPE" NOT NULL,
+    "bundleId" TEXT,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Campaign_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."CampaignScreen" (
+    "id" TEXT NOT NULL,
+    "campaignId" TEXT NOT NULL,
+    "screenId" TEXT NOT NULL,
+
+    CONSTRAINT "CampaignScreen_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -167,6 +199,18 @@ ALTER TABLE "public"."Message" ADD CONSTRAINT "Message_receiverId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "public"."Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Campaign" ADD CONSTRAINT "Campaign_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Campaign" ADD CONSTRAINT "Campaign_bundleId_fkey" FOREIGN KEY ("bundleId") REFERENCES "public"."Bundle"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."CampaignScreen" ADD CONSTRAINT "CampaignScreen_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "public"."Campaign"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."CampaignScreen" ADD CONSTRAINT "CampaignScreen_screenId_fkey" FOREIGN KEY ("screenId") REFERENCES "public"."Screen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."_BundleScreens" ADD CONSTRAINT "_BundleScreens_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."Bundle"("id") ON DELETE CASCADE ON UPDATE CASCADE;
