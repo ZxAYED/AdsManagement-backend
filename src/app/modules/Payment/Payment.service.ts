@@ -206,7 +206,7 @@ const getSingleCustomPaymentFromDB = async (id: string) => {
           email: true,
         },
       },
-     screens:true
+      screens: true,
     },
   });
 
@@ -215,6 +215,105 @@ const getSingleCustomPaymentFromDB = async (id: string) => {
   }
 
   return payment;
+};
+
+const getAllCustomPayments = async (query: any) => {
+  // 1️⃣ Pagination values
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(query);
+
+  // 2️⃣ Build dynamic filters from query
+  let whereConditions = buildDynamicFilters(query, paymentSearchableFields);
+
+  // 3️⃣ Filter by userId
+  whereConditions = {
+    ...whereConditions,
+    status: { not: "pending" },
+  };
+  // 4️⃣ Total count
+  const total = await prisma.customPayment.count({ where: whereConditions });
+
+  // 5️⃣ Fetch data with relations
+  const result = await prisma.customPayment.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: sortBy
+      ? { [sortBy]: sortOrder === "asc" ? "asc" : "desc" }
+      : { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+        },
+      },
+      screens: true,
+    },
+  });
+
+  // 6️⃣ Meta info
+  const meta = {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+  };
+
+  return { data: result, meta };
+};
+const getAllBundlePayments = async (query: any) => {
+  // 1️⃣ Pagination values
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(query);
+
+  // 2️⃣ Build dynamic filters from query
+  let whereConditions = buildDynamicFilters(query, paymentSearchableFields);
+
+  // 3️⃣ Filter by userId
+  whereConditions = {
+    ...whereConditions,
+    status: { not: "pending" },
+  };
+  // 4️⃣ Total count
+  const total = await prisma.bundlePayment.count({ where: whereConditions });
+
+  // 5️⃣ Fetch data with relations
+  const result = await prisma.bundlePayment.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy: sortBy
+      ? { [sortBy]: sortOrder === "asc" ? "asc" : "desc" }
+      : { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+        },
+      },
+      bundle: {
+        include: {
+          screens: true, // nested include
+        },
+      },
+    },
+  });
+
+  // 6️⃣ Meta info
+  const meta = {
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit),
+  };
+
+  return { data: result, meta };
 };
 
 const checkoutBundle = async (data: any) => {
@@ -389,5 +488,7 @@ export const paymentService = {
   myselfPayments,
   checkoutCustom,
   myselfCustomPayments,
-  getSingleCustomPaymentFromDB
+  getSingleCustomPaymentFromDB,
+  getAllCustomPayments,
+  getAllBundlePayments
 };

@@ -23,6 +23,27 @@ const getAll = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+const getAllCustomPayments= catchAsync(async (req: Request, res: Response) => {
+  const result = await paymentService.getAllCustomPayments(req.query);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Payment list fetched successfully",
+    data: result,
+  });
+})
+const getAllBundlePayments= catchAsync(async (req: Request, res: Response) => {
+  const result = await paymentService.getAllBundlePayments(req.query);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Payment list fetched successfully",
+    data: result,
+  });
+})
+
+
 const myselfPayments = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
     const result = await paymentService.myselfPayments(
@@ -236,5 +257,7 @@ export const PaymentController = {
   myselfPayments,
   createCustomPayment,
   myselfCustomPayments,
-  getSingleCustomPaymentFromDBById
+  getSingleCustomPaymentFromDBById,
+  getAllCustomPayments,
+  getAllBundlePayments
 };

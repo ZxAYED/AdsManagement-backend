@@ -20,6 +20,9 @@ router.get(
   RoleValidation(USER_ROLE.customer, USER_ROLE.admin),
   PaymentController.myselfCustomPayments
 );
+
+router.get('/get-all-custom-payments', RoleValidation(USER_ROLE.admin), PaymentController.getAllCustomPayments)
+router.get('/get-all-bundle-payments', RoleValidation(USER_ROLE.admin), PaymentController.getAllBundlePayments)
 router.get("/", RoleValidation(USER_ROLE.admin), PaymentController.getAll);
 router.get(
   "/:id",
