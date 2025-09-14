@@ -27,13 +27,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  status           USER_STATUS       @default(active)
+  status           USER_STATUS      @default(active)
   Banner           Banner[]
-  sentMessages     Message[]         @relation("SentMessages")
-  receivedMessages Message[]         @relation("ReceivedMessages")
+  sentMessages     Message[]        @relation("SentMessages")
+  receivedMessages Message[]        @relation("ReceivedMessages")
   Notification     Notification[]
-  BundleCampaign  BundleCampaign[]
+  BundleCampaign   BundleCampaign[]
   BundlePayment    BundlePayment[]
+  CustomCampaign   CustomCampaign[]
+  CustomPayment    CustomPayment[]
 }
 
 enum USER_STATUS {
@@ -51,26 +53,88 @@ enum ORGANISATION_ROLE {
   agency
 }
 
+// model Screen {
+//   id               String              @id @default(uuid())
+//   slug             String              @unique
+//   screen_name      String
+//   screen_size      String
+//   description      String
+//   resolution       String
+//   lat              String
+//   lng              String
+//   img_url          String
+//   price            Float
+//   duration         String
+//   availability     SCREEN_AVAILABILITY
+//   status           SCREEN_STATUS
+//   location         String
+//   isDeleted        Boolean             @default(false)
+//   createdAt        DateTime            @default(now())
+//   updatedAt        DateTime            @updatedAt
+//   bundles          Bundle[]            @relation("BundleScreens")
+//   CustomCampaigns  CustomCampaign[]    @relation("CampaignScreens")
+//   CustomCampaign   CustomCampaign?     @relation(fields: [customCampaignId], references: [id])
+//   customCampaignId String?
+// }
+
+
 model Screen {
-  id             String              @id @default(uuid())
-  slug           String              @unique
-  screen_name    String
-  screen_size    String
-  description    String
-  resolution     String
-  lat            String
-  lng            String
-  img_url        String
-  price          Float
-  duration       String
-  availability   SCREEN_AVAILABILITY
-  status         SCREEN_STATUS
-  location       String
-  isDeleted      Boolean             @default(false)
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  bundles        Bundle[]            @relation("BundleScreens")
+  id               String              @id @default(uuid())
+  slug             String              @unique
+  screen_name      String
+  screen_size      String
+  description      String
+  resolution       String
+  lat              String
+  lng              String
+  img_url          String
+  price            Float
+  duration         String
+  availability     SCREEN_AVAILABILITY
+  status           SCREEN_STATUS
+  location         String
+  isDeleted        Boolean             @default(false)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  bundles          Bundle[]            @relation("BundleScreens")
+  CustomCampaigns  CustomCampaign[]    @relation("CampaignScreens") // many-to-many only
+   CustomPayments   CustomPayment[]     @relation("PaymentScreens")
 }
+
+model CustomCampaign {
+  id         String          @id @default(uuid())
+  customerId String
+  status     CAMPAIGN_STATUS
+  type       CAMPAIGN_TYPE   @default(custom)
+  contentUrl String
+
+  startDate  DateTime
+  endDate    DateTime
+
+  customer   User            @relation(fields: [customerId], references: [id])
+  screens    Screen[]        @relation("CampaignScreens") // many-to-many
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  CustomPayment CustomPayment[]
+}
+model CustomPayment {
+  id            String         @id @default(uuid())
+  customerId    String
+  user          User           @relation(fields: [customerId], references: [id])
+  campaignId    String
+  campaign      CustomCampaign @relation(fields: [campaignId], references: [id])
+  amount        Float
+  status        PAYMENT_STATUS @default(pending)
+  transactionId String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // New relation
+  screens       Screen[]       @relation("PaymentScreens")
+}
+
 
 enum SCREEN_AVAILABILITY {
   available
@@ -83,21 +147,21 @@ enum SCREEN_STATUS {
 }
 
 model Bundle {
-  id              String            @id @default(uuid())
-  bundle_name     String
-  slug            String            @unique
-  isDeleted       Boolean           @default(false)
-  screens         Screen[]          @relation("BundleScreens")
-  img_url         String
-  price           Float
-  duration        String
-  status          BUNDLE_STATUS
-  location        String
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id          String        @id @default(uuid())
+  bundle_name String
+  slug        String        @unique
+  isDeleted   Boolean       @default(false)
+  screens     Screen[]      @relation("BundleScreens")
+  img_url     String
+  price       Float
+  duration    String
+  status      BUNDLE_STATUS
+  location    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   BundleCampaign BundleCampaign[]
-  BundlePayment   BundlePayment[]
+  BundlePayment  BundlePayment[]
 }
 
 model Banner {
@@ -111,7 +175,6 @@ enum BUNDLE_STATUS {
   ongoing
   expired
 }
-
 
 model BundlePayment {
   id            String         @id @default(uuid())

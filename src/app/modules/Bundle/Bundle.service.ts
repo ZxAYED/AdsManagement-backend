@@ -32,7 +32,7 @@ const getAllBundleFromDB = async (query: any) => {
   // Step 2: For each bundle, count only successful payments
   const bundlesWithBuyCount = await Promise.all(
     bundles.map(async (bundle) => {
-      const successPaymentCount = await prisma.payment.count({
+      const successPaymentCount = await prisma.bundlePayment.count({
         where: {
           bundleId: bundle.id,
           status: 'success', // only count successful payments
@@ -96,7 +96,7 @@ const getSingleBundleFromDB = async (slug: string) => {
   });
 
   // Step 3: Count only successful payments for the bundle
-  const successPaymentCount = await prisma.payment.count({
+  const successPaymentCount = await prisma.bundlePayment.count({
     where: {
       bundleId: bundle?.id,
       status: "success",
