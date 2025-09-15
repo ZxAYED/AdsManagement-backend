@@ -5,9 +5,14 @@ import RoleValidation from "../../middlewares/RoleValidation";
 import { USER_ROLE } from "@prisma/client";
 
 const router = express.Router();
+router.get(
+  "/myself-favourite-screen",
+  RoleValidation(USER_ROLE.customer),
+  ScreenController.getMySelfFavouriteScreen
+);
 
 router.get("/", ScreenController.getAll);
-router.get("/:id", ScreenController.getById);
+router.get("/:slug", ScreenController.getById);
 router.post(
   "/",
   upload.single("file"),
@@ -21,5 +26,10 @@ router.patch(
   ScreenController.update
 );
 router.delete("/:id", RoleValidation(USER_ROLE.admin), ScreenController.remove);
+router.post(
+  "/add-favourite-screen",
+  RoleValidation(USER_ROLE.customer),
+  ScreenController.addFavouriteScreen
+);
 
 export const ScreenRoutes = router;

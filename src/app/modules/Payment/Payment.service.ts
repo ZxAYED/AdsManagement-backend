@@ -10,6 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET as string, {
   apiVersion: "2025-08-27.basil",
 });
 
+
 const paymentSearchableFields = ["transactionId", "status"];
 
 const myselfPayments = async (userId: string, query: any) => {
