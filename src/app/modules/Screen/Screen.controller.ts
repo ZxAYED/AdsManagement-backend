@@ -19,7 +19,7 @@ const getAll = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getById = catchAsync(async (req: Request, res: Response) => {
-  const result = await ScreenService.getSingleScreenFromDB(req.params.id);
+  const result = await ScreenService.getSingleScreenFromDB(req.params.slug);
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
@@ -136,10 +136,43 @@ const remove = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const addFavouriteScreen= catchAsync(async (req: Request & { user?: any }, res: Response) => {
+
+  const payload ={
+    screenId: req.body.screenId as string,
+    userId: req.user.id as string
+  }
+
+  // console.log({payload})
+
+  const result = await ScreenService.addFavouriteScreen(payload);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Screen added to favourites successfully",
+    data: result,
+  });
+});
+
+
+const getMySelfFavouriteScreen= catchAsync(async (req: Request & { user?: any }, res: Response) => {
+  const result = await ScreenService.getMySelfFavouriteScreen(req.user.id as string);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Screen list fetched successfully",
+    data: result,
+  });
+});
+
+
 export const ScreenController = {
   getAll,
   getById,
   create,
   update,
   remove,
+  addFavouriteScreen,
+  getMySelfFavouriteScreen
 };
