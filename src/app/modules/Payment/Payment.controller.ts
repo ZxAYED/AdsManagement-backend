@@ -11,18 +11,30 @@ import { uploadImageToSupabase } from "../../middlewares/uploadImageToSupabase";
 import fs from "fs";
 import { CAMPAIGN_STATUS } from "@prisma/client";
 const stripe = new Stripe(process.env.STRIPE_SECRET as string, {
-  apiVersion: "2025-07-30.basil",
+  apiVersion: "2025-08-27.basil",
 });
 
-const getAll = catchAsync(async (req: Request, res: Response) => {
-  const result = await paymentService.getAllPaymentsFromDB(req.query);
+
+const getAllCustomPayments= catchAsync(async (req: Request, res: Response) => {
+  const result = await paymentService.getAllCustomPayments(req.query);
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
     message: "Payment list fetched successfully",
     data: result,
   });
-});
+})
+const getAllBundlePayments= catchAsync(async (req: Request, res: Response) => {
+  const result = await paymentService.getAllBundlePayments(req.query);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Payment list fetched successfully",
+    data: result,
+  });
+})
+
+
 const myselfPayments = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
     const result = await paymentService.myselfPayments(
@@ -37,9 +49,24 @@ const myselfPayments = catchAsync(
     });
   }
 );
+const myselfCustomPayments = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    const result = await paymentService.myselfCustomPayments(
+      req.user?.id as string,
+      req.query
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Payment list fetched successfully",
+      data: result,
+    });
+  }
+);
 
-const getById = catchAsync(async (req: Request, res: Response) => {
-  const result = await paymentService.getSinglePaymentFromDB(req.params.id);
+const getSingleCustomPaymentFromDBById = catchAsync(async (req: Request, res: Response) => {
+  console.log(req.params.id)
+  const result = await paymentService.getSingleCustomPaymentFromDB(req.params.id);
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
@@ -47,58 +74,15 @@ const getById = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-
-// const create = catchAsync(
-//   async (req: Request & { user?: any }, res: Response) => {
-//     const payload = {
-//       customerId: req.user?.id as string,
-//       bundleId: req.body.bundleId as string,
-//     };
-//     // console.log("🚀 ~ payload:", payload)
-
-//     const result = await paymentService.checkoutBundle(payload);
-//     sendResponse(res, {
-//       statusCode: status.CREATED,
-//       success: true,
-//       message: "Payment created successfully",
-//       data: result,
-//     });
-//   }
-// );
-
-// const create = catchAsync(
-//   async (req: Request & { user?: any }, res: Response) => {
-//     console.log("file", req.file);
-//     console.log("data", req.body.data)
-
-//     const data = JSON.parse(req.body.data)
-//     console.log({data})
-
-//     console.log("path", req.file?.path)
-
-//     // const contentUrl = await uploadImageToSupabase(
-//     //   req.file?.path as any,
-//     //   req.file?.originalname as string
-//     // );
-
-//     // console.log("🚀 ~ fileUrl:", contentUrl);
-
-//     const payload = {
-//       customerId: req.user?.id as string,
-//       bundleId: req.body.bundleId as string,
-//     };
-
-//     // Call service to create Stripe session
-//     // const result = await paymentService.checkoutBundle(payload);
-
-//     sendResponse(res, {
-//       statusCode: status.CREATED,
-//       success: true,
-//       message: "Payment session created successfully",
-//       data: "result", // Stripe session URL and paymentId
-//     });
-//   }
-// );
+const getgetSingleBundlePaymentFromDBById = catchAsync(async (req: Request, res: Response) => {
+  const result = await paymentService.getSingleBundlePaymentFromDB(req.params.id);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Payment fetched successfully",
+    data: result,
+  });
+});
 
 const create = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
@@ -148,82 +132,49 @@ const create = catchAsync(
   }
 );
 
-// const stripeWebhook = async (req: Request, res: Response) => {
-//   const sig = req.headers["stripe-signature"] as string;
-//   let event: Stripe.Event;
+const createCustomPayment = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    console.log("📦 Uploaded file:", req.file);
+    const parsedData = JSON.parse(req.body.data);
 
-//   // 1️⃣ Verify webhook signature
-//   try {
-//     event = stripe.webhooks.constructEvent(
-//       req.body as Buffer,
-//       sig,
-//       process.env.STRIPE_WEBHOOK_SECRET as string
-//     );
-//     console.log("✅ Event constructed:", event.type);
-//   } catch (err: any) {
-//     console.error("❌ Webhook signature verification failed:", err.message);
-//     return res.status(400).send(`Webhook Error: ${err.message}`);
-//   }
+    if (!req.file)
+      throw new AppError(status.BAD_REQUEST, "File upload is required");
 
-//   try {
-//     const session = event.data.object as Stripe.Checkout.Session;
-//     const paymentMap = session.metadata?.paymentMap
-//       ? JSON.parse(session.metadata.paymentMap)
-//       : {};
+    const fileName = `${Date.now()}_${req.file.originalname}`;
+    const contentUrl = await uploadImageToSupabase(req.file, fileName);
+    fs.unlinkSync(req.file.path);
 
-//     switch (event.type) {
-//       // ✅ Payment success
-//       case "checkout.session.completed": {
-//         for (const paymentId of Object.values(paymentMap)) {
-//           await prisma.payment.update({
-//             where: { id: paymentId as string},
-//             data: {
-//               status: "success",
-//               transactionId: session.payment_intent as string,
-//             },
-//           });
-//           console.log("✅ Payment marked success:", paymentId);
-//         }
-//         break;
-//       }
+    const payload = {
+      ...parsedData,
+      customerId: req.user?.id as string,
+      contentUrl,
+    };
 
-//       // ❌ Payment failed or expired
-//       case "checkout.session.expired":
-//       case "checkout.session.async_payment_failed": {
-//         for (const paymentId of Object.values(paymentMap)) {
-//           await prisma.payment.update({
-//             where: { id: paymentId as string},
-//             data: { status: "failed" },
-//           });
-//           console.log("⚠️ Payment marked failed:", paymentId);
-//         }
-//         break;
-//       }
+    console.log({ payload });
 
-//       // 🔄 Default: do nothing
-//       default:
-//         console.log("ℹ️ Unhandled event type:", event.type);
-//     }
+    const result = await paymentService.checkoutCustom(payload);
 
-//     return res.status(200).json({ received: true });
-//   } catch (err: any) {
-//     console.error("❌ Error updating payments:", err.message);
-//     return res.status(500).send("Internal Server Error");
-//   }
-// };
+    sendResponse(res, {
+      statusCode: status.CREATED,
+      success: true,
+      message: "Custom payment session created",
+      data: result,
+    });
+  }
+);
 
 const stripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
   let event: Stripe.Event;
 
-  // 1️⃣ Verify the Stripe webhook signature
+  // 1️⃣ Verify webhook signature
   try {
     event = stripe.webhooks.constructEvent(
       req.body as Buffer,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET as string
     );
-    console.log("✅ Webhook received:", event.type);
+    // console.log("✅ Webhook received:", event.type);
   } catch (err: any) {
     console.error("❌ Webhook verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -231,48 +182,55 @@ const stripeWebhook = async (req: Request, res: Response) => {
 
   try {
     const session = event.data.object as Stripe.Checkout.Session;
-    const paymentId = session.metadata?.paymentId;
-    const campaignId = session.metadata?.campaignId;
 
-   
+    // Payment metadata
+    const paymentId = session.metadata?.paymentId as string;
+    const campaignId = session.metadata?.campaignId as string;
+    const paymentType = session.metadata?.paymentType as string; // "bundle" | "custom"
 
-    // 2️⃣ Handle webhook event types
+    // Decide table based on paymentType
+    let paymentModel: any;
+    let campaignModel: any;
+
+    if (paymentType === "bundle") {
+      paymentModel = prisma.bundlePayment;
+      campaignModel = prisma.bundleCampaign;
+    } else if (paymentType === "custom") {
+      paymentModel = prisma.customPayment;
+      campaignModel = prisma.customCampaign;
+    } else {
+    }
+
+    // 2️⃣ Handle webhook events
     switch (event.type) {
-      case "checkout.session.completed": {
-        // ✅ Mark payment as successful
-        await prisma.bundlePayment.update({
+      case "checkout.session.completed":
+        await paymentModel.update({
           where: { id: paymentId },
           data: {
             status: "success",
             transactionId: session.payment_intent as string,
           },
         });
-
-        await prisma.bundleCampaign.update({
-          where:{
-            id:campaignId
-          },
-          data:{
-            status:CAMPAIGN_STATUS.pending
-          }
-        })
-        console.log("✅ Payment marked as successful:", paymentId);
+        await campaignModel.update({
+          where: { id: campaignId },
+          data: { status: CAMPAIGN_STATUS.pending },
+        });
+        console.log(
+          `✅ ${paymentType} payment marked as successful:`,
+          paymentId
+        );
         break;
-      }
 
       case "checkout.session.expired":
-      case "checkout.session.async_payment_failed": {
-        // ❌ Mark payment as failed
-        await prisma.bundlePayment.update({
+      case "checkout.session.async_payment_failed":
+        await paymentModel.update({
           where: { id: paymentId },
           data: { status: "failed" },
         });
-        console.log("⚠️ Payment marked as failed:", paymentId);
+        console.log(`⚠️ ${paymentType} payment marked as failed:`, paymentId);
         break;
-      }
 
       default:
-        // ℹ️ For other events, do nothing
         console.log("ℹ️ Unhandled Stripe event:", event.type);
     }
 
@@ -284,9 +242,14 @@ const stripeWebhook = async (req: Request, res: Response) => {
 };
 
 export const PaymentController = {
-  getAll,
-  getById,
+
   create,
   stripeWebhook,
   myselfPayments,
+  createCustomPayment,
+  myselfCustomPayments,
+  getSingleCustomPaymentFromDBById,
+  getAllCustomPayments,
+  getAllBundlePayments,
+  getgetSingleBundlePaymentFromDBById
 };
