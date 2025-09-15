@@ -14,15 +14,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET as string, {
   apiVersion: "2025-08-27.basil",
 });
 
-const getAll = catchAsync(async (req: Request, res: Response) => {
-  const result = await paymentService.getAllPaymentsFromDB(req.query);
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Payment list fetched successfully",
-    data: result,
-  });
-});
 
 const getAllCustomPayments= catchAsync(async (req: Request, res: Response) => {
   const result = await paymentService.getAllCustomPayments(req.query);
@@ -73,8 +64,9 @@ const myselfCustomPayments = catchAsync(
   }
 );
 
-const getById = catchAsync(async (req: Request, res: Response) => {
-  const result = await paymentService.getSinglePaymentFromDB(req.params.id);
+const getSingleCustomPaymentFromDBById = catchAsync(async (req: Request, res: Response) => {
+  console.log(req.params.id)
+  const result = await paymentService.getSingleCustomPaymentFromDB(req.params.id);
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
@@ -82,8 +74,8 @@ const getById = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-const getSingleCustomPaymentFromDBById = catchAsync(async (req: Request, res: Response) => {
-  const result = await paymentService.getSinglePaymentFromDB(req.params.id);
+const getgetSingleBundlePaymentFromDBById = catchAsync(async (req: Request, res: Response) => {
+  const result = await paymentService.getSingleBundlePaymentFromDB(req.params.id);
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
@@ -250,8 +242,7 @@ const stripeWebhook = async (req: Request, res: Response) => {
 };
 
 export const PaymentController = {
-  getAll,
-  getById,
+
   create,
   stripeWebhook,
   myselfPayments,
@@ -259,5 +250,6 @@ export const PaymentController = {
   myselfCustomPayments,
   getSingleCustomPaymentFromDBById,
   getAllCustomPayments,
-  getAllBundlePayments
+  getAllBundlePayments,
+  getgetSingleBundlePaymentFromDBById
 };
