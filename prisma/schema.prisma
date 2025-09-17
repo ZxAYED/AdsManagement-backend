@@ -92,6 +92,7 @@ model FavouriteScreen {
 model CustomCampaign {
   id         String          @id @default(uuid())
   customerId String
+  paymentId  String?
   status     CAMPAIGN_STATUS
   type       CAMPAIGN_TYPE   @default(custom)
   contentUrl String
@@ -105,6 +106,7 @@ model CustomCampaign {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   CustomPayment CustomPayment[]
+   
 }
 
 model CustomPayment {
@@ -164,16 +166,17 @@ enum BUNDLE_STATUS {
 }
 
 model BundlePayment {
-  id            String         @id @default(uuid())
-  customerId    String
-  user          User           @relation(fields: [customerId], references: [id])
-  bundleId      String
-  bundle        Bundle         @relation(fields: [bundleId], references: [id])
-  amount        Float
-  status        PAYMENT_STATUS @default(pending)
-  transactionId String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id             String           @id @default(uuid())
+  customerId     String
+  user           User             @relation(fields: [customerId], references: [id])
+  bundleId       String
+  bundle         Bundle           @relation(fields: [bundleId], references: [id])
+  amount         Float
+  status         PAYMENT_STATUS   @default(pending)
+  transactionId  String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  BundleCampaign BundleCampaign[]
 }
 
 enum PAYMENT_STATUS {
@@ -211,15 +214,18 @@ model BundleCampaign {
   id         String          @id @default(uuid())
   bundleId   String
   customerId String
+  paymentId  String?
   status     CAMPAIGN_STATUS
   type       CAMPAIGN_TYPE
   contentUrl String
 
   startDate DateTime
   endDate   DateTime
-  customer  User     @relation(fields: [customerId], references: [id])
-
-  bundle Bundle @relation(fields: [bundleId], references: [id])
+  customer  User           @relation(fields: [customerId], references: [id])
+  payment   BundlePayment? @relation(fields: [paymentId], references: [id])
+  bundle    Bundle         @relation(fields: [bundleId], references: [id])
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
 enum CAMPAIGN_TYPE {

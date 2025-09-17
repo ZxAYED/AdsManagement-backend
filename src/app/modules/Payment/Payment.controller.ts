@@ -213,7 +213,7 @@ const stripeWebhook = async (req: Request, res: Response) => {
         });
         await campaignModel.update({
           where: { id: campaignId },
-          data: { status: CAMPAIGN_STATUS.pending },
+          data: { status: CAMPAIGN_STATUS.pending ,paymentId:paymentId},
         });
         console.log(
           `✅ ${paymentType} payment marked as successful:`,
