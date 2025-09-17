@@ -166,6 +166,8 @@ const loginUser = async (payload: { email: string; password: string }) => {
       organisation_role: user.organisation_role,
       organisation_name: user.organisation_name,
       phone: user.phone,
+      status: user.status,
+      is_verified: user.is_verified,
     },
     config.jwt.access_token_secret as Secret,
     config.jwt.access_token_expires_in as string
@@ -205,23 +207,26 @@ const refreshAccessToken = async (token: string) => {
 
     const { email } = decoded;
 
-    const userData = await prisma.user.findFirst({
+    const user = await prisma.user.findFirst({
       where: { email },
     });
 
-    if (!userData) {
+    if (!user) {
       throw new AppError(status.NOT_FOUND, "User not found");
     }
 
     const accessToken = jwtHelpers.generateToken(
       {
-        id: userData.id,
-        email: userData.email,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        role: userData.role,
-        organisation_role: userData.organisation_role,
-        phone: userData.phone,
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role,
+        organisation_role: user.organisation_role,
+        organisation_name: user.organisation_name,
+        phone: user.phone,
+        status: user.status,
+        is_verified: user.is_verified,
       },
       config.jwt.access_token_secret as Secret,
       config.jwt.access_token_expires_in as string
@@ -269,7 +274,6 @@ const changePassword = async (payload: ChangePasswordPayload) => {
   return { message: "Password changed successfully" };
 };
 
-
 const requestPasswordReset = async (email: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new AppError(status.NOT_FOUND, "User not found");
@@ -295,14 +299,15 @@ const requestPasswordReset = async (email: string) => {
   return { message: "Password reset OTP sent to your email" };
 };
 
-
 interface ResetPasswordPayload {
   email: string;
-  otp: string;        // 4-digit OTP
+  otp: string; // 4-digit OTP
   newPassword: string;
 }
 
-const resetPassword = async (payload: ResetPasswordPayload & { opt?: string }) => {
+const resetPassword = async (
+  payload: ResetPasswordPayload & { opt?: string }
+) => {
   const { email, otp, newPassword, opt } = payload;
   const otpCode = otp || opt; // use otp if present, otherwise opt
 
@@ -313,7 +318,10 @@ const resetPassword = async (payload: ResetPasswordPayload & { opt?: string }) =
     throw new AppError(status.UNAUTHORIZED, "Invalid OTP");
   }
 
-  if (!user.password_reset_expires || user.password_reset_expires < new Date()) {
+  if (
+    !user.password_reset_expires ||
+    user.password_reset_expires < new Date()
+  ) {
     throw new AppError(status.UNAUTHORIZED, "OTP has expired");
   }
 
@@ -331,7 +339,6 @@ const resetPassword = async (payload: ResetPasswordPayload & { opt?: string }) =
   return { message: "Password has been reset successfully" };
 };
 
-
 export const UserService = {
   createUser,
   loginUser,
@@ -340,5 +347,5 @@ export const UserService = {
   verifyOtp,
   changePassword,
   requestPasswordReset,
-  resetPassword
+  resetPassword,
 };
