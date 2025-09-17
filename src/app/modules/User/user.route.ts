@@ -10,10 +10,20 @@ router.get(
   RoleValidation(USER_ROLE.admin),
   UserDataController.getAllUsers
 );
+
+router.get(
+  "/:id",
+  RoleValidation(USER_ROLE.admin),
+  UserDataController.getSingleUser
+)
+
 router.get(
   "/me",
   RoleValidation(USER_ROLE.customer, USER_ROLE.admin),
   UserDataController.myProfileInfo
 );
+
+
+
 
 export const UserDataRoutes = router;
