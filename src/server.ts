@@ -5,6 +5,7 @@ import { ORGANISATION_ROLE, USER_ROLE } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { setupWebSocket } from "./utils/websocket";
 import config from "./config";
+import { startCampaignStatusUpdater } from "./corn/campaignStatusUpdater";
 // import cron from "node-cron";
 // import axios from "axios";
 const port = 5000;
@@ -41,6 +42,7 @@ async function ensureAdmin() {
 async function main() {
   // Ensure default admin exists first
   await ensureAdmin();
+  startCampaignStatusUpdater()
 
   const httpServer: HTTPServer = app.listen(port, () => {
     console.log("🚀 Server is running on port", port);
