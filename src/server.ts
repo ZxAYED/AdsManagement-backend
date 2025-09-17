@@ -5,7 +5,8 @@ import { ORGANISATION_ROLE, USER_ROLE } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { setupWebSocket } from "./utils/websocket";
 import config from "./config";
-
+// import cron from "node-cron";
+// import axios from "axios";
 const port = 5000;
 
 async function ensureAdmin() {
@@ -51,6 +52,14 @@ async function main() {
   );
   app.set("wss", wss);
   app.set("onlineUsers", onlineUsers);
+//   cron.schedule("*/5 * * * *", async () => {
+//     try {
+//       const response = await axios.get(`http://localhost:${port}/`);
+//       console.log("Pinged root route:", response.status); // 200 expected
+//     } catch (err: any) {
+//       console.error("Ping failed:", err.message);
+//     }
+//   });
 }
 
 main().catch((err) => {
