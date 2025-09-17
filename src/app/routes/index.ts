@@ -5,6 +5,7 @@ import { BundleRoutes } from "../modules/Bundle/Bundle.routes";
 import { ScreenRoutes } from "../modules/Screen/Screen.routes";
 import { UserDataRoutes } from "../modules/User/user.route";
 import { PaymentRoutes } from "../modules/Payment/Payment.routes";
+import { CampaignRoutes } from "../modules/Campaign/campaign.route";
 
 const router = express.Router();
 
@@ -33,6 +34,11 @@ const moduleRoutes = [
     path: "/payment",
     route: PaymentRoutes,
   },
+  {
+    path: "/campaign",
+    route: CampaignRoutes,
+  },
+  
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));
