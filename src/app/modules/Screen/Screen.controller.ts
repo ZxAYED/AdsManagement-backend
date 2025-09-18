@@ -116,6 +116,8 @@ const update = catchAsync(async (req: Request, res: Response) => {
     id: req.params.id,
     ...payload,
     ...(img_url && { img_url }),
+    slug:
+        payload.screen_name.toLowerCase().replace(/ /g, "-") + "-" + nanoid(6),
   });
 
   sendResponse(res, {

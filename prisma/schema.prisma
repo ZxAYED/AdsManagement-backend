@@ -65,7 +65,7 @@ model Screen {
   lng          String
   img_url      String
   price        Float
-  duration     String
+  // duration     String
   availability SCREEN_AVAILABILITY
   status       SCREEN_STATUS
   location     String
