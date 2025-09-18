@@ -12,18 +12,23 @@ router.get(
 );
 
 router.get(
-  "/:id",
-  RoleValidation(USER_ROLE.admin),
-  UserDataController.getSingleUser
-)
-
-router.get(
   "/me",
   RoleValidation(USER_ROLE.customer, USER_ROLE.admin),
   UserDataController.myProfileInfo
 );
 
+router.get(
+  "/:id",
+  RoleValidation(USER_ROLE.admin),
+  UserDataController.getSingleUser
+);
 
 
+
+router.patch(
+  "/update-profile",
+  RoleValidation(USER_ROLE.customer, USER_ROLE.admin),
+  UserDataController.updateProfile
+);
 
 export const UserDataRoutes = router;

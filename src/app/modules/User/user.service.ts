@@ -4,6 +4,7 @@ import prisma from "../../../shared/prisma";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
+import { User, USER_STATUS } from "@prisma/client";
 
 const UserSearchableFields: any = ["first_name", "last_name", "email", "phone"];
 
@@ -172,8 +173,26 @@ const getSingleUser = async (id: string) => {
   return isUserFind;
 };
 
+type UpdateUser = { first_name: string; last_name: string; phone: string };
+
+const updateProfile = async (userId: string, data: Partial<UpdateUser>) => {
+  const isUserFind = await prisma.user.findFirst({
+    where: { id: userId, status: USER_STATUS.active },
+  });
+
+  if (!isUserFind) {
+    throw new AppError(status.NOT_FOUND, "User not found");
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data,
+  });
+};
+
 export const UserDataServices = {
   getAllUsers,
   getSingleUser,
   myProfileInfo,
+  updateProfile
 };
