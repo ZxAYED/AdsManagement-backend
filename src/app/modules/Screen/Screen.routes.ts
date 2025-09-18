@@ -25,6 +25,17 @@ router.patch(
   RoleValidation(USER_ROLE.admin),
   ScreenController.update
 );
+
+router.patch(
+  '/change-availability-status-maintenance/:id',
+  RoleValidation(USER_ROLE.admin),
+  ScreenController.changeAvaillabilityStatusToMaintannence
+)
+router.patch(
+  '/change-availability-status-available/:id',
+  RoleValidation(USER_ROLE.admin),
+  ScreenController.changeAvaillabilityStatusToAvailable
+)
 router.delete("/:id", RoleValidation(USER_ROLE.admin), ScreenController.remove);
 router.post(
   "/add-favourite-screen",

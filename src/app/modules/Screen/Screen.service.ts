@@ -1,11 +1,11 @@
-import { Screen } from "@prisma/client";
+import { Screen, SCREEN_AVAILABILITY, SCREEN_STATUS } from "@prisma/client";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
 
-const ScreenSearchableFields = ["slug", "screen_name"]; 
+const ScreenSearchableFields = ["slug", "screen_name"];
 
 const getAllScreenFromDB = async (query: any) => {
   const { page, limit, skip, sortBy, sortOrder } =
@@ -17,7 +17,11 @@ const getAllScreenFromDB = async (query: any) => {
     where: { ...whereConditions, isDeleted: false },
   });
   const result = await prisma.screen.findMany({
-    where: { ...whereConditions, isDeleted: false },
+    where: {
+      ...whereConditions,
+      isDeleted: false,
+      availability: SCREEN_AVAILABILITY.available,
+    },
     skip,
     take: limit,
     orderBy: { [sortBy]: sortOrder },
@@ -61,7 +65,13 @@ const postScreenIntoDB = async (data: Screen) => {
       "Screen with this name & size already exists"
     );
   }
-  return await prisma.screen.create({ data });
+  return await prisma.screen.create({
+    data: {
+      ...data,
+      status: SCREEN_STATUS.active,
+      availability: SCREEN_AVAILABILITY.available,
+    },
+  });
 };
 
 const updateScreenIntoDB = async ({ id, ...data }: any) => {
@@ -95,7 +105,6 @@ const addFavouriteScreen = async (data: {
   screenId: string;
   userId: string;
 }) => {
-
   if (!data.screenId || !data.userId) {
     throw new AppError(status.BAD_REQUEST, "screenId and userId are required");
   }
@@ -134,7 +143,41 @@ const getMySelfFavouriteScreen = async (userId: string) => {
       screen: true,
     },
   });
+};
 
+const changeAvaillabilityStatusToMaintannence = async (screenId: string) => {
+  const isScreenExist = await prisma.screen.findFirst({
+    where: { id: screenId, isDeleted: false },
+  });
+
+  if (!isScreenExist) {
+    throw new AppError(status.NOT_FOUND, "Screen not found");
+  }
+
+  if (isScreenExist.availability === SCREEN_AVAILABILITY.maintenance) {
+    throw new AppError(status.CONFLICT, "Screen is already in maintenance");
+  }
+
+  await prisma.screen.update({
+    where: { id: screenId },
+    data: { availability: SCREEN_AVAILABILITY.maintenance },
+  });
+};
+const changeAvaillabilityStatusToAvailable = async (screenId: string) => {
+  const isScreenExist = await prisma.screen.findFirst({
+    where: { id: screenId, isDeleted: false },
+  });
+
+  if (!isScreenExist) {
+    throw new AppError(status.NOT_FOUND, "Screen not found");
+  }
+  if (isScreenExist.availability === SCREEN_AVAILABILITY.available) {
+    throw new AppError(status.CONFLICT, "Screen is already in available");
+  }
+  await prisma.screen.update({
+    where: { id: screenId },
+    data: { availability: SCREEN_AVAILABILITY.available },
+  });
 };
 
 export const ScreenService = {
@@ -145,4 +188,6 @@ export const ScreenService = {
   deleteScreenFromDB,
   addFavouriteScreen,
   getMySelfFavouriteScreen,
+  changeAvaillabilityStatusToMaintannence,
+  changeAvaillabilityStatusToAvailable,
 };
