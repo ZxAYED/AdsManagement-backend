@@ -184,7 +184,7 @@ const updateProfile = async (userId: string, data: Partial<UpdateUser>) => {
     throw new AppError(status.NOT_FOUND, "User not found");
   }
 
-  const updatedUser = await prisma.user.update({
+  await prisma.user.update({
     where: { id: userId },
     data,
   });
@@ -194,5 +194,5 @@ export const UserDataServices = {
   getAllUsers,
   getSingleUser,
   myProfileInfo,
-  updateProfile
+  updateProfile,
 };
