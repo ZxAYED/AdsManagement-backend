@@ -10,6 +10,12 @@ const getAllBannerFromDB = async () => {
 };
 
 const getSingleBannerFromDB = async (id: string) => {
+  const isBannerExist = await prisma.banner.findUnique({ where: { id } });
+
+  if (!isBannerExist) {
+    throw new AppError(status.NOT_FOUND, "Banner not found");
+  }
+
   return await prisma.banner.findUnique({ where: { id } });
 };
 
@@ -22,7 +28,7 @@ const deleteBannerFromDB = async (id: string) => {
   const isBannerExist = await prisma.banner.findUnique({ where: { id } });
 
   if (!isBannerExist) {
-    throw new AppError(status.NOT_FOUND,"Banner not found");
+    throw new AppError(status.NOT_FOUND, "Banner not found");
   }
 
   await prisma.banner.delete({ where: { id } });
