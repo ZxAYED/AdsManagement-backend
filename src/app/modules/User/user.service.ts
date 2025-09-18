@@ -4,7 +4,7 @@ import prisma from "../../../shared/prisma";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
-import { User, USER_STATUS } from "@prisma/client";
+import {  USER_STATUS } from "@prisma/client";
 
 const UserSearchableFields: any = ["first_name", "last_name", "email", "phone"];
 

@@ -169,6 +169,28 @@ const getMySelfFavouriteScreen= catchAsync(async (req: Request & { user?: any },
 });
 
 
+const changeAvaillabilityStatusToMaintannence = catchAsync(async (req: Request , res: Response) => {
+
+  const result = await ScreenService.changeAvaillabilityStatusToMaintannence(req.params.id as string);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Screen availlability status changed at maintannence successfully",
+    data: result,
+  });
+})
+const changeAvaillabilityStatusToAvailable = catchAsync(async (req: Request , res: Response) => {
+
+  const result = await ScreenService.changeAvaillabilityStatusToAvailable(req.params.id as string);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Screen availlability status changed at available successfully",
+    data: result,
+  });
+})
+
+
 export const ScreenController = {
   getAll,
   getById,
@@ -176,5 +198,7 @@ export const ScreenController = {
   update,
   remove,
   addFavouriteScreen,
-  getMySelfFavouriteScreen
+  getMySelfFavouriteScreen,
+  changeAvaillabilityStatusToMaintannence,
+  changeAvaillabilityStatusToAvailable
 };
