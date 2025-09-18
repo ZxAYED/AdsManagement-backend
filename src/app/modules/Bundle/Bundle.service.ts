@@ -7,7 +7,6 @@ import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 
 const bundleSearchableFields = ["slug", "bundle_name"]; // adjust fields
 
-
 const getAllBundleFromDB = async (query: any) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
@@ -35,7 +34,7 @@ const getAllBundleFromDB = async (query: any) => {
       const successPaymentCount = await prisma.bundlePayment.count({
         where: {
           bundleId: bundle.id,
-          status: 'success', // only count successful payments
+          status: "success", // only count successful payments
         },
       });
 
@@ -58,24 +57,6 @@ const getAllBundleFromDB = async (query: any) => {
     meta,
   };
 };
-
-
-
-// const getSingleBundleFromDB = async (slug: string) => {
-//   const isBundleExist = await prisma.bundle.findFirst({
-//     where: { slug: slug, isDeleted: false },
-//   });
-
-//   if (!isBundleExist) {
-//     throw new AppError(status.NOT_FOUND, "Bundle not found");
-//   }
-
-//   return await prisma.bundle.findUnique({
-//     where: { slug },
-//     include: { screens: true },
-//   });
-// };
-
 
 const getSingleBundleFromDB = async (slug: string) => {
   // Step 1: Check if bundle exists and is not deleted
@@ -109,7 +90,6 @@ const getSingleBundleFromDB = async (slug: string) => {
     totalNumberOfBuy: successPaymentCount,
   };
 };
-
 
 const postBundleIntoDB = async (data: {
   bundle_name: string;
@@ -174,9 +154,11 @@ const postBundleIntoDB = async (data: {
 };
 
 const updateBundleIntoDB = async (data: Partial<Bundle>) => {
-
   if (!data.slug) {
-    throw new AppError(status.BAD_REQUEST, "Bundle slug is required for update");
+    throw new AppError(
+      status.BAD_REQUEST,
+      "Bundle slug is required for update"
+    );
   }
 
   const existingBundle = await prisma.bundle.findUnique({
@@ -219,7 +201,6 @@ const updateBundleIntoDB = async (data: Partial<Bundle>) => {
   });
 };
 
-
 const deleteBundleFromDB = async (slug: string) => {
   const isBundleExist = await prisma.bundle.findUnique({ where: { slug } });
 
@@ -232,7 +213,6 @@ const deleteBundleFromDB = async (slug: string) => {
   });
 };
 
-
 const getAvailableBundlesFromDB = async (query: any) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
@@ -243,9 +223,9 @@ const getAvailableBundlesFromDB = async (query: any) => {
     where: {
       ...whereConditions,
       isDeleted: false,
-      status: "ongoing", 
+      status: "ongoing",
       screens: {
-        some: {
+        every: {
           status: "active",
           availability: "available",
           isDeleted: false,
@@ -283,12 +263,11 @@ const getAvailableBundlesFromDB = async (query: any) => {
   return { data: result, meta };
 };
 
-
 export const BundleService = {
   getAllBundleFromDB,
   getSingleBundleFromDB,
   postBundleIntoDB,
   updateBundleIntoDB,
   deleteBundleFromDB,
-  getAvailableBundlesFromDB
+  getAvailableBundlesFromDB,
 };

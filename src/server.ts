@@ -54,14 +54,7 @@ async function main() {
   );
   app.set("wss", wss);
   app.set("onlineUsers", onlineUsers);
-//   cron.schedule("*/5 * * * *", async () => {
-//     try {
-//       const response = await axios.get(`http://localhost:${port}/`);
-//       console.log("Pinged root route:", response.status); // 200 expected
-//     } catch (err: any) {
-//       console.error("Ping failed:", err.message);
-//     }
-//   });
+
 }
 
 main().catch((err) => {

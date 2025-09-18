@@ -34,7 +34,7 @@ const createUser = async (payload: User) => {
     otp_expires_at: otpExpiresAt,
     is_verified: false,
     role: USER_ROLE.customer,
-    organisation_role: ORGANISATION_ROLE.advertiser,
+    // organisation_role: ORGANISATION_ROLE.advertiser,
   };
 
   console.log("📨 OTP generated:", otp);
