@@ -5,6 +5,10 @@ import { campaignController } from "./campaign.controller";
 
 const router = express.Router();
 
+
+router.get("/get-single-bundle-campaign/:id",RoleValidation(USER_ROLE.admin, USER_ROLE.customer), campaignController.getSingleBundleCampaignFromDB);
+router.get("/get-single-custom-campaign/:id",RoleValidation(USER_ROLE.admin, USER_ROLE.customer), campaignController.getSingleCustomCampaignFromDB);
+
 router.get(
   "/get-all-bundle-campaign",
   RoleValidation(USER_ROLE.admin),
