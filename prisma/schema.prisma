@@ -78,6 +78,7 @@ model Screen {
   CustomPayments  CustomPayment[]   @relation("PaymentScreens")
   FavouriteScreen FavouriteScreen[]
   BundleContent   BundleContent[]
+  CustomContent   CustomContent[]
 }
 
 model FavouriteScreen {
@@ -96,13 +97,11 @@ model CustomCampaign {
   paymentId  String?
   status     CAMPAIGN_STATUS
   type       CAMPAIGN_TYPE   @default(custom)
-  contentUrl String
-
-  startDate DateTime
-  endDate   DateTime
-
-  customer User     @relation(fields: [customerId], references: [id])
-  screens  Screen[] @relation("CampaignScreens") // many-to-many
+  startDate  DateTime
+  endDate    DateTime
+  contentIds String[] // array of BundleContent IDs
+  customer   User     @relation(fields: [customerId], references: [id])
+  screens    Screen[] @relation("CampaignScreens") // many-to-many
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -120,9 +119,19 @@ model CustomPayment {
   transactionId String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-
+  contentIds    String[] // array of BundleContent IDs
   // New relation
-  screens Screen[] @relation("PaymentScreens")
+  screens       Screen[]       @relation("PaymentScreens")
+}
+
+model CustomContent {
+  id        String   @id @default(uuid())
+
+  screenId  String
+  url       String
+  screen    Screen   @relation(fields: [screenId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum SCREEN_AVAILABILITY {

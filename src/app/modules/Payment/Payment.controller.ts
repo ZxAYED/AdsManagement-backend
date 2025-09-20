@@ -223,36 +223,119 @@ const create = catchAsync(
   }
 );
 
+// const createCustomPayment = catchAsync(
+//   async (req: Request & { user?: any }, res: Response) => {
+//     console.log("📦 Uploaded file:", req.file);
+//     const parsedData = JSON.parse(req.body.data);
+
+//     if (!req.file)
+//       throw new AppError(status.BAD_REQUEST, "File upload is required");
+
+//     const fileName = `${Date.now()}_${req.file.originalname}`;
+//     const contentUrl = await uploadImageToSupabase(req.file, fileName);
+//     fs.unlinkSync(req.file.path);
+
+//     const payload = {
+//       ...parsedData,
+//       customerId: req.user?.id as string,
+//       contentUrl,
+//     };
+
+//     console.log({ payload });
+
+//     const result = await paymentService.checkoutCustom(payload);
+
+//     sendResponse(res, {
+//       statusCode: status.CREATED,
+//       success: true,
+//       message: "Custom payment session created",
+//       data: result,
+//     });
+//   }
+// );
+
+
 const createCustomPayment = catchAsync(
-  async (req: Request & { user?: any }, res: Response) => {
-    console.log("📦 Uploaded file:", req.file);
-    const parsedData = JSON.parse(req.body.data);
+  async (req: Request & { user?: any; files?: any }, res: Response) => {
+    try {
+      console.log("📦 Uploaded files:", req.files);
+      console.log("📄 Body data:", req.body.data);
 
-    if (!req.file)
-      throw new AppError(status.BAD_REQUEST, "File upload is required");
+      const filesObj = req.files as { [key: string]: Express.Multer.File[] } | undefined;
 
-    const fileName = `${Date.now()}_${req.file.originalname}`;
-    const contentUrl = await uploadImageToSupabase(req.file, fileName);
-    fs.unlinkSync(req.file.path);
+      if (!filesObj) {
+        throw new AppError(status.BAD_REQUEST, "Files upload is required");
+      }
 
-    const payload = {
-      ...parsedData,
-      customerId: req.user?.id as string,
-      contentUrl,
-    };
+      // total uploaded files
+      let totalFiles = 0;
+      for (const key in filesObj) {
+        totalFiles += filesObj[key].length;
+      }
+      console.log("Total files uploaded:", totalFiles);
 
-    console.log({ payload });
+      // parse body data
+      const parsedData = JSON.parse(req.body.data || "{}");
+      console.log("✅ Parsed data:", parsedData);
 
-    const result = await paymentService.checkoutCustom(payload);
+      // Validate screenIds
+      if (!parsedData.screenIds || !Array.isArray(parsedData.screenIds)) {
+        throw new AppError(status.BAD_REQUEST, "screenIds array is required in data");
+      }
 
-    sendResponse(res, {
-      statusCode: status.CREATED,
-      success: true,
-      message: "Custom payment session created",
-      data: result,
-    });
+      const screenIds = parsedData.screenIds;
+
+      if (totalFiles < screenIds.length) {
+        throw new AppError(
+          status.BAD_REQUEST,
+          `${screenIds.length} files required, but only ${totalFiles} uploaded`
+        );
+      }
+
+      // upload files and map to screen IDs
+      const contentData: { screenId: string; url: string }[] = [];
+      const fileKeys = Object.keys(filesObj);
+
+      for (let i = 0; i < fileKeys.length; i++) {
+        const fieldName = fileKeys[i];
+        const file = filesObj[fieldName][0];
+        const fileName = `${Date.now()}_${file.originalname}`;
+
+        const uploadedUrl = await uploadImageToSupabase(file, fileName);
+
+        const screenId = screenIds[i];
+        if (!screenId) continue;
+
+        contentData.push({ screenId, url: uploadedUrl });
+
+        // remove local file
+        fs.unlinkSync(file.path);
+      }
+
+      const payload = {
+        ...parsedData,
+        customerId: req.user?.id as string,
+        content: contentData, // [{ screenId, url }, ...]
+      };
+
+      console.log("🚀 Final Payload:", payload);
+
+      const result = await paymentService.checkoutCustom(payload);
+
+      sendResponse(res, {
+        statusCode: status.CREATED,
+        success: true,
+        message: "Custom payment session created with screens uploaded successfully",
+        data: result,
+      });
+    } catch (error: any) {
+      console.error("❌ Error in createCustomPayment controller:", error);
+      throw error;
+    }
   }
 );
+
+
 
 const stripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;

@@ -15,6 +15,28 @@ const getAllBundleCampaignFromDB = catchAsync(
     });
   }
 );
+const getSingleBundleCampaignFromDB = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await CampaignService.getSingleBundleCampaignFromDB(req.params.id);
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Campaign fetched successfully",
+      data: result,
+    });
+  }
+);
+const getSingleCustomCampaignFromDB = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await CampaignService.getSingleCustomCampaignFromDB(req.params.id);
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Campaign fetched successfully",
+      data: result,
+    });
+  }
+);
 const getAllCustomCampaignFromDB = catchAsync(
   async (req: Request, res: Response) => {
     const result = await CampaignService.getAllCustomCampaignFromDB(req.query);
@@ -63,5 +85,7 @@ export const campaignController ={
     getAllBundleCampaignFromDB,
     getAllCustomCampaignFromDB,
     myselfAllBundleCampaignFromDB,
-    myselfAllCustomCampaignFromDB
+    myselfAllCustomCampaignFromDB,
+    getSingleBundleCampaignFromDB,
+    getSingleCustomCampaignFromDB
 }
