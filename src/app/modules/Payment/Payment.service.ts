@@ -10,61 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET as string, {
   apiVersion: "2025-08-27.basil",
 });
 
-
 const paymentSearchableFields = ["transactionId", "status"];
-
-// const myselfPayments = async (userId: string, query: any) => {
-//   // 1️⃣ Pagination values
-//   const { page, limit, skip, sortBy, sortOrder } =
-//     paginationHelper.calculatePagination(query);
-
-//   // 2️⃣ Build dynamic filters from query
-//   let whereConditions = buildDynamicFilters(query, paymentSearchableFields);
-
-//   // 3️⃣ Filter by userId
-//   whereConditions = {
-//     ...whereConditions,
-//     customerId: userId,
-//     status: { not: "pending" },
-//   };
-//   // 4️⃣ Total count
-//   const total = await prisma.bundlePayment.count({ where: whereConditions });
-
-//   // 5️⃣ Fetch data with relations
-//   const result = await prisma.bundlePayment.findMany({
-//     where: whereConditions,
-//     skip,
-//     take: limit,
-//     orderBy: sortBy
-//       ? { [sortBy]: sortOrder === "asc" ? "asc" : "desc" }
-//       : { createdAt: "desc" },
-//     include: {
-//       user: {
-//         select: {
-//           id: true,
-//           first_name: true,
-//           last_name: true,
-//           email: true,
-//         },
-//       },
-//       bundle: {
-//         include: {
-//           screens: true, // nested include
-//         },
-//       },
-//     },
-//   });
-
-//   // 6️⃣ Meta info
-//   const meta = {
-//     page,
-//     limit,
-//     total,
-//     totalPages: Math.ceil(total / limit),
-//   };
-
-//   return { data: result, meta };
-// };
 
 const myselfPayments = async (userId: string, query: any) => {
   const { page, limit, skip, sortBy, sortOrder } =
@@ -102,9 +48,9 @@ const myselfPayments = async (userId: string, query: any) => {
     payments.map(async (payment) => {
       const contents = await prisma.bundleContent.findMany({
         where: { id: { in: payment.contentIds } },
-        include:{
-          screen:true
-        }
+        include: {
+          screen: true,
+        },
       });
       return { ...payment, contents };
     })
@@ -115,7 +61,6 @@ const myselfPayments = async (userId: string, query: any) => {
   return { data: paymentsWithContent, meta };
 };
 
-
 const myselfCustomPayments = async (userId: string, query: any) => {
   // 1️⃣ Pagination values
   const { page, limit, skip, sortBy, sortOrder } =
@@ -124,17 +69,18 @@ const myselfCustomPayments = async (userId: string, query: any) => {
   // 2️⃣ Build dynamic filters from query
   let whereConditions = buildDynamicFilters(query, paymentSearchableFields);
 
-  // 3️⃣ Filter by userId
+  // 3️⃣ Filter by userId and non-pending payments
   whereConditions = {
     ...whereConditions,
     customerId: userId,
     status: { not: "pending" },
   };
+
   // 4️⃣ Total count
   const total = await prisma.customPayment.count({ where: whereConditions });
 
-  // 5️⃣ Fetch data with relations
-  const result = await prisma.customPayment.findMany({
+  // 5️⃣ Fetch payments with basic relations
+  const payments = await prisma.customPayment.findMany({
     where: whereConditions,
     skip,
     take: limit,
@@ -143,18 +89,27 @@ const myselfCustomPayments = async (userId: string, query: any) => {
       : { createdAt: "desc" },
     include: {
       user: {
-        select: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          email: true,
-        },
+        select: { id: true, first_name: true, last_name: true, email: true },
       },
       screens: true,
     },
   });
 
-  // 6️⃣ Meta info
+  // 6️⃣ Fetch content for each payment
+  const paymentsWithContents = await Promise.all(
+    payments.map(async (payment) => {
+      const contents = await prisma.customContent.findMany({
+        where: { id: { in: payment.contentIds } },
+        include: { screen: true },
+      });
+      return {
+        ...payment,
+        contents, // attach full content objects
+      };
+    })
+  );
+
+  // 7️⃣ Meta info
   const meta = {
     page,
     limit,
@@ -162,12 +117,13 @@ const myselfCustomPayments = async (userId: string, query: any) => {
     totalPages: Math.ceil(total / limit),
   };
 
-  return { data: result, meta };
+  return { data: paymentsWithContents, meta };
 };
 
+
 const getSingleCustomPaymentFromDB = async (id: string) => {
-  console.log({id})
-  const payment = await prisma.customPayment.findUnique({
+  // 1️⃣ Fetch the payment with basic relations
+  const payment = await prisma.customPayment.findFirst({
     where: { id },
     include: {
       user: {
@@ -186,9 +142,21 @@ const getSingleCustomPaymentFromDB = async (id: string) => {
     throw new AppError(status.NOT_FOUND, "Payment not found");
   }
 
-  return payment;
+  // 2️⃣ Fetch content objects based on contentIds
+  const contents = await prisma.customContent.findMany({
+    where: { id: { in: payment.contentIds } },
+    include: { screen: true }, // screen relation include
+  });
+
+  // 3️⃣ Attach contents to the payment object
+  return { ...payment, contents };
 };
+
+
+
+
 const getSingleBundlePaymentFromDB = async (id: string) => {
+  // 1️⃣ Fetch the payment with basic relations
   const payment = await prisma.bundlePayment.findUnique({
     where: { id },
     include: {
@@ -212,47 +180,56 @@ const getSingleBundlePaymentFromDB = async (id: string) => {
     throw new AppError(status.NOT_FOUND, "Payment not found");
   }
 
-  return payment;
+  // 2️⃣ Fetch content objects based on contentIds
+  const contents = await prisma.bundleContent.findMany({
+    where: { id: { in: payment.contentIds } },
+    include: { screen: true }, // screen relation include
+  });
+
+  // 3️⃣ Attach contents to the payment object
+  return { ...payment, contents };
 };
 
+
 const getAllCustomPayments = async (query: any) => {
-  // 1️⃣ Pagination values
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
 
-  // 2️⃣ Build dynamic filters from query
   let whereConditions = buildDynamicFilters(query, paymentSearchableFields);
 
-  // 3️⃣ Filter by userId
   whereConditions = {
     ...whereConditions,
     status: { not: "pending" },
   };
-  // 4️⃣ Total count
+
   const total = await prisma.customPayment.count({ where: whereConditions });
 
-  // 5️⃣ Fetch data with relations
-  const result = await prisma.customPayment.findMany({
-    where: whereConditions,
-    skip,
-    take: limit,
+  const campaigns = await prisma.customCampaign.findMany({
+    where: {},
     orderBy: sortBy
       ? { [sortBy]: sortOrder === "asc" ? "asc" : "desc" }
       : { createdAt: "desc" },
+    take: limit,
+    skip,
     include: {
-      user: {
-        select: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          email: true,
-        },
+      customer: {
+        select: { id: true, first_name: true, last_name: true, email: true },
       },
       screens: true,
+      CustomPayment: true,
     },
   });
 
-  // 6️⃣ Meta info
+  const campaignsWithContents = await Promise.all(
+    campaigns.map(async (campaign) => {
+      const contents = await prisma.customContent.findMany({
+        where: { id: { in: campaign.contentIds } },
+        include: { screen: true },
+      });
+      return { ...campaign, contents };
+    })
+  );
+
   const meta = {
     page,
     limit,
@@ -260,8 +237,10 @@ const getAllCustomPayments = async (query: any) => {
     totalPages: Math.ceil(total / limit),
   };
 
-  return { data: result, meta };
+  return { data: campaignsWithContents, meta };
 };
+
+
 const getAllBundlePayments = async (query: any) => {
   // 1️⃣ Pagination values
   const { page, limit, skip, sortBy, sortOrder } =
@@ -313,86 +292,6 @@ const getAllBundlePayments = async (query: any) => {
 
   return { data: result, meta };
 };
-
-
-
-// const checkoutBundle = async (data: any) => {
-//   console.log("🚀 ~ checkoutBundle ~ data:", data)
-  
-//   // return await prisma.$transaction(async (tx) => {
-//   //   // 1️⃣ Validate customer
-//   //   const user = await tx.user.findUnique({
-//   //     where: { id: data.customerId },
-//   //   });
-//   //   if (!user) throw new AppError(status.NOT_FOUND, "User not found");
-
-//   //   // 2️⃣ Validate bundle
-//   //   const bundle = await tx.bundle.findUnique({
-//   //     where: { id: data.bundleId },
-//   //   });
-//   //   if (!bundle) throw new AppError(status.NOT_FOUND, "Bundle not found");
-
-//   //   // 3️⃣ Calculate campaign end date
-//   //   const endDate = calculateEndDate(data.startDate, bundle.duration);
-
-//   //   // 4️⃣ Create campaign record
-//   //   const campaign = await tx.bundleCampaign.create({
-//   //     data: {
-//   //       bundleId: bundle.id,
-//   //       customerId: data.customerId,
-//   //       status: CAMPAIGN_STATUS.notPaid,
-//   //       type: CAMPAIGN_TYPE.bundle,
-//   //       contentUrl: data.contentUrl,
-//   //       startDate: new Date(data.startDate),
-//   //       endDate,
-//   //     },
-//   //   });
-
-//   //   // 5️⃣ Create payment record
-//   //   const payment = await tx.bundlePayment.create({
-//   //     data: {
-//   //       customerId: data.customerId,
-//   //       bundleId: bundle.id,
-//   //       amount: bundle.price,
-//   //       status: "pending",
-//   //     },
-//   //   });
-
-//   //   // 6️⃣ Create Stripe checkout session
-//   //   const session = await stripe.checkout.sessions.create({
-//   //     payment_method_types: ["card"],
-//   //     mode: "payment",
-//   //     line_items: [
-//   //       {
-//   //         price_data: {
-//   //           currency: "usd",
-//   //           product_data: {
-//   //             name: bundle.bundle_name,
-//   //             description: `Duration: ${bundle.duration}, Location: ${bundle.location}`,
-//   //           },
-//   //           unit_amount: Math.round(bundle.price * 100), // Stripe requires amount in cents
-//   //         },
-//   //         quantity: 1,
-//   //       },
-//   //     ],
-//   //     customer_email: user.email,
-//   //     success_url: `${process.env.FRONTEND_URL}/payment-success/${payment.id}`,
-//   //     cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
-//   //     metadata: {
-//   //       paymentId: payment.id,
-//   //       campaignId: campaign.id,
-//   //       paymentType: "bundle",
-//   //     },
-//   //   });
-
-//   //   // 7️⃣ Return checkout session URL and payment ID
-//   //   return {
-//   //     url: session.url,
-//   //     paymentId: payment.id,
-//   //   };
-//   // });
-// };
-
 
 const checkoutBundle = async (data: any) => {
   console.log("🚀 ~ checkoutBundle ~ data:", data);
@@ -497,8 +396,9 @@ const checkoutBundle = async (data: any) => {
 
 
 
-
 const checkoutCustom = async (data: any) => {
+  console.log("🚀 ~ checkoutCustom ~ data:", data);
+
   return await prisma.$transaction(async (tx) => {
     // 1️⃣ Validate customer
     const user = await tx.user.findUnique({
@@ -513,44 +413,63 @@ const checkoutCustom = async (data: any) => {
     if (!screens.length)
       throw new AppError(status.BAD_REQUEST, "No valid screens selected");
 
-    // 3️⃣ Calculate total price based on campaign duration
+    // 3️⃣ Calculate total amount based on duration
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
 
     const durationInMs = endDate.getTime() - startDate.getTime();
-    const durationInDays =
-      Math.ceil(durationInMs / (1000 * 60 * 60 * 24)) + 1; // inclusive
+    const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24)) + 1;
 
     const totalAmount = screens.reduce(
       (sum, s) => sum + s.price * durationInDays,
       0
     );
 
-    // 4️⃣ Create campaign
+    // 4️⃣ Save uploaded content in CustomContent table
+    const savedContents = [];
+    for (const c of data.content) {
+      const saved = await tx.customContent.create({
+        data: {
+          screenId: c.screenId,
+          url: c.url,
+        },
+      });
+      savedContents.push(saved);
+    }
+
+    if (savedContents.length === 0) {
+      throw new AppError(status.BAD_REQUEST, "No content uploaded");
+    }
+
+    // Get all content IDs
+    const contentIds = savedContents.map((c) => c.id);
+
+    // 5️⃣ Create CustomCampaign
     const campaign = await tx.customCampaign.create({
       data: {
-        customerId: data.customerId,
         status: CAMPAIGN_STATUS.notPaid,
         type: CAMPAIGN_TYPE.custom,
-        contentUrl: data.contentUrl,
         startDate,
         endDate,
+        contentIds,
+        customer: { connect: { id: data.customerId } }, // ✅ connect relation
         screens: { connect: screens.map((s) => ({ id: s.id })) },
       },
     });
 
-    // 5️⃣ Create payment
+    // 6️⃣ Create CustomPayment
     const payment = await tx.customPayment.create({
       data: {
         customerId: data.customerId,
         campaignId: campaign.id,
         amount: totalAmount,
         status: "pending",
+        contentIds,
         screens: { connect: screens.map((s) => ({ id: s.id })) },
       },
     });
 
-    // 6️⃣ Create Stripe checkout session
+    // 7️⃣ Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -563,7 +482,7 @@ const checkoutCustom = async (data: any) => {
           },
           unit_amount: Math.round(screen.price * 100),
         },
-        quantity: durationInDays, // এখানে duration-in-days অনুযায়ী qty দেওয়া ভালো
+        quantity: durationInDays,
       })),
       customer_email: user.email,
       success_url: `${process.env.FRONTEND_URL}/payment-success/${payment.id}`,
@@ -575,12 +494,15 @@ const checkoutCustom = async (data: any) => {
       },
     });
 
-    return { url: session.url, paymentId: payment.id };
+    // 8️⃣ Return session URL, paymentId, campaignId, contentIds
+    return {
+      url: session.url,
+      paymentId: payment.id,
+      campaignId: campaign.id,
+      contentIds,
+    };
   });
 };
-
-
-
 
 export const paymentService = {
   checkoutBundle,
@@ -590,5 +512,5 @@ export const paymentService = {
   getSingleCustomPaymentFromDB,
   getAllCustomPayments,
   getAllBundlePayments,
-  getSingleBundlePaymentFromDB
+  getSingleBundlePaymentFromDB,
 };

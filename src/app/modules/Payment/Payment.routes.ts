@@ -1,4 +1,3 @@
-
 import { USER_ROLE } from "@prisma/client";
 import express from "express";
 import RoleValidation from "../../middlewares/RoleValidation";
@@ -45,8 +44,6 @@ router.get(
   PaymentController.getAllBundlePayments
 );
 
-
-
 // Checkout Routes
 // router.post(
 //   "/checkout-bundle",
@@ -56,7 +53,7 @@ router.get(
 // );
 router.post(
   "/checkout-bundle",
-    upload.fields(
+  upload.fields(
     Array.from({ length: 10 }).map((_, i) => ({
       name: `file${i + 1}`,
       maxCount: 1,
@@ -69,7 +66,12 @@ router.post(
 
 router.post(
   "/checkout-custom",
-  upload.single("file"),
+  upload.fields(
+    Array.from({ length: 10 }).map((_, i) => ({
+      name: `file${i + 1}`,
+      maxCount: 1,
+    }))
+  ),
   RoleValidation(USER_ROLE.customer),
   PaymentController.createCustomPayment
 );
