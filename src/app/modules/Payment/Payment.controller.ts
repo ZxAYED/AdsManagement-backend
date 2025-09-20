@@ -14,8 +14,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET as string, {
   apiVersion: "2025-08-27.basil",
 });
 
-
-const getAllCustomPayments= catchAsync(async (req: Request, res: Response) => {
+const getAllCustomPayments = catchAsync(async (req: Request, res: Response) => {
   const result = await paymentService.getAllCustomPayments(req.query);
   sendResponse(res, {
     statusCode: status.OK,
@@ -23,8 +22,8 @@ const getAllCustomPayments= catchAsync(async (req: Request, res: Response) => {
     message: "Payment list fetched successfully",
     data: result,
   });
-})
-const getAllBundlePayments= catchAsync(async (req: Request, res: Response) => {
+});
+const getAllBundlePayments = catchAsync(async (req: Request, res: Response) => {
   const result = await paymentService.getAllBundlePayments(req.query);
   sendResponse(res, {
     statusCode: status.OK,
@@ -32,8 +31,7 @@ const getAllBundlePayments= catchAsync(async (req: Request, res: Response) => {
     message: "Payment list fetched successfully",
     data: result,
   });
-})
-
+});
 
 const myselfPayments = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
@@ -64,58 +62,150 @@ const myselfCustomPayments = catchAsync(
   }
 );
 
-const getSingleCustomPaymentFromDBById = catchAsync(async (req: Request, res: Response) => {
-  console.log(req.params.id)
-  const result = await paymentService.getSingleCustomPaymentFromDB(req.params.id);
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Payment fetched successfully",
-    data: result,
-  });
-});
-const getgetSingleBundlePaymentFromDBById = catchAsync(async (req: Request, res: Response) => {
-  const result = await paymentService.getSingleBundlePaymentFromDB(req.params.id);
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Payment fetched successfully",
-    data: result,
-  });
-});
+const getSingleCustomPaymentFromDBById = catchAsync(
+  async (req: Request, res: Response) => {
+    console.log(req.params.id);
+    const result = await paymentService.getSingleCustomPaymentFromDB(
+      req.params.id
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Payment fetched successfully",
+      data: result,
+    });
+  }
+);
+const getgetSingleBundlePaymentFromDBById = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await paymentService.getSingleBundlePaymentFromDB(
+      req.params.id
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Payment fetched successfully",
+      data: result,
+    });
+  }
+);
+
+// const create = catchAsync(
+//   async (req: Request & { user?: any }, res: Response) => {
+//     try {
+//       console.log("📦 Uploaded file:", req.file);
+//       console.log("📄 Body data:", req.body.data);
+
+//       const parsedData = JSON.parse(req.body.data);
+//       console.log("✅ Parsed data:", parsedData);
+
+//       // Ensure file exists
+//       if (!req.file) {
+//         throw new AppError(status.BAD_REQUEST, "File upload is required");
+//       }
+
+//       const fileName = `${Date.now()}_${req.file.originalname}`;
+
+//       // Upload the file to Supabase (image or video)
+//       const contentUrl = await uploadImageToSupabase(req.file, fileName);
+
+//       console.log("✅ Uploaded to Supabase:", contentUrl);
+
+//       fs.unlinkSync(req.file.path);
+
+//       const payload = {
+//         ...parsedData,
+//         customerId: req.user?.id as string,
+//         contentUrl: contentUrl,
+//       };
+
+//       console.log({ payload });
+
+//       // TODO: Replace with your real service call
+//       const result = await paymentService.checkoutBundle(payload);
+
+//       sendResponse(res, {
+//         statusCode: status.CREATED,
+//         success: true,
+//         message: "Media uploaded and payment session created successfully",
+//         data: {
+//           session: result,
+//         },
+//       });
+//     } catch (error: any) {
+//       console.log(error);
+//     }
+//   }
+// );
+
+
 
 const create = catchAsync(
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any; files?: any }, res: Response) => {
     try {
-      console.log("📦 Uploaded file:", req.file);
+      console.log("📦 Uploaded files:", req.files);
       console.log("📄 Body data:", req.body.data);
 
-      const parsedData = JSON.parse(req.body.data);
+      const filesObj = req.files as { [key: string]: Express.Multer.File[] };
+
+      // total uploaded files
+      let totalFiles = 0;
+      for (const key in filesObj) {
+        totalFiles += filesObj[key].length;
+      }
+      console.log("Total files uploaded:", totalFiles);
+
+      // parse body data
+      const parsedData = JSON.parse(req.body.data || "{}");
       console.log("✅ Parsed data:", parsedData);
 
-      // Ensure file exists
-      if (!req.file) {
-        throw new AppError(status.BAD_REQUEST, "File upload is required");
+      // find bundle
+      const findBundle = await prisma.bundle.findUnique({
+        where: { id: parsedData.bundleId },
+        include: { screens: true },
+      });
+
+      if (!findBundle) {
+        throw new AppError(status.BAD_REQUEST, "Bundle not found");
       }
 
-      const fileName = `${Date.now()}_${req.file.originalname}`;
+      // ensure all files are uploaded
+      if (totalFiles < findBundle.screens.length) {
+        throw new AppError(
+          status.BAD_REQUEST,
+          `${findBundle.screens.length} files required, but only ${totalFiles} uploaded`
+        );
+      }
 
-      // Upload the file to Supabase (image or video)
-      const contentUrl = await uploadImageToSupabase(req.file, fileName);
+      // upload files and map to screen IDs
+      const contentData: { screenId: string; url: string }[] = [];
+      const screens = findBundle.screens;
 
-      console.log("✅ Uploaded to Supabase:", contentUrl);
+      for (let i = 0; i < Object.keys(filesObj).length; i++) {
+        const fieldName = Object.keys(filesObj)[i];
+        const file = filesObj[fieldName][0];
+        const fileName = `${Date.now()}_${file.originalname}`;
 
-      fs.unlinkSync(req.file.path);
+        const uploadedUrl = await uploadImageToSupabase(file, fileName);
+
+        // map to screen id
+        const screenId = screens[i]?.id;
+        if (!screenId) continue;
+
+        contentData.push({ screenId, url: uploadedUrl });
+
+        // remove local file
+        fs.unlinkSync(file.path);
+      }
 
       const payload = {
         ...parsedData,
         customerId: req.user?.id as string,
-        contentUrl: contentUrl,
+        content: contentData, // [{ screenId, url }, ...]
       };
 
-      console.log({ payload });
+      console.log("🚀 Final Payload:", payload);
 
-      // TODO: Replace with your real service call
       const result = await paymentService.checkoutBundle(payload);
 
       sendResponse(res, {
@@ -127,7 +217,8 @@ const create = catchAsync(
         },
       });
     } catch (error: any) {
-      console.log(error);
+      console.error("❌ Error in create controller:", error);
+      throw error;
     }
   }
 );
@@ -213,7 +304,7 @@ const stripeWebhook = async (req: Request, res: Response) => {
         });
         await campaignModel.update({
           where: { id: campaignId },
-          data: { status: CAMPAIGN_STATUS.pending ,paymentId:paymentId},
+          data: { status: CAMPAIGN_STATUS.pending, paymentId: paymentId },
         });
         console.log(
           `✅ ${paymentType} payment marked as successful:`,
@@ -242,7 +333,6 @@ const stripeWebhook = async (req: Request, res: Response) => {
 };
 
 export const PaymentController = {
-
   create,
   stripeWebhook,
   myselfPayments,
@@ -251,5 +341,5 @@ export const PaymentController = {
   getSingleCustomPaymentFromDBById,
   getAllCustomPayments,
   getAllBundlePayments,
-  getgetSingleBundlePaymentFromDBById
+  getgetSingleBundlePaymentFromDBById,
 };
