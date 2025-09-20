@@ -77,6 +77,7 @@ model Screen {
   CustomCampaigns CustomCampaign[]  @relation("CampaignScreens") // many-to-many only
   CustomPayments  CustomPayment[]   @relation("PaymentScreens")
   FavouriteScreen FavouriteScreen[]
+  BundleContent   BundleContent[]
 }
 
 model FavouriteScreen {
@@ -106,7 +107,6 @@ model CustomCampaign {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   CustomPayment CustomPayment[]
-   
 }
 
 model CustomPayment {
@@ -151,6 +151,7 @@ model Bundle {
 
   BundleCampaign BundleCampaign[]
   BundlePayment  BundlePayment[]
+  BundleContent  BundleContent[]
 }
 
 model Banner {
@@ -163,20 +164,6 @@ model Banner {
 enum BUNDLE_STATUS {
   ongoing
   expired
-}
-
-model BundlePayment {
-  id             String           @id @default(uuid())
-  customerId     String
-  user           User             @relation(fields: [customerId], references: [id])
-  bundleId       String
-  bundle         Bundle           @relation(fields: [bundleId], references: [id])
-  amount         Float
-  status         PAYMENT_STATUS   @default(pending)
-  transactionId  String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  BundleCampaign BundleCampaign[]
 }
 
 enum PAYMENT_STATUS {
@@ -210,6 +197,21 @@ model Notification {
   user User @relation(fields: [userId], references: [id])
 }
 
+model BundlePayment {
+  id             String           @id @default(uuid())
+  customerId     String
+  user           User             @relation(fields: [customerId], references: [id])
+  bundleId       String
+  bundle         Bundle           @relation(fields: [bundleId], references: [id])
+  amount         Float
+  status         PAYMENT_STATUS   @default(pending)
+  transactionId  String?
+  contentIds     String[] // array of BundleContent IDs
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  BundleCampaign BundleCampaign[]
+}
+
 model BundleCampaign {
   id         String          @id @default(uuid())
   bundleId   String
@@ -217,15 +219,25 @@ model BundleCampaign {
   paymentId  String?
   status     CAMPAIGN_STATUS
   type       CAMPAIGN_TYPE
-  contentUrl String
+  contentIds String[] // array of BundleContent IDs
+  startDate  DateTime
+  endDate    DateTime
+  customer   User            @relation(fields: [customerId], references: [id])
+  payment    BundlePayment?  @relation(fields: [paymentId], references: [id])
+  bundle     Bundle          @relation(fields: [bundleId], references: [id])
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+}
 
-  startDate DateTime
-  endDate   DateTime
-  customer  User           @relation(fields: [customerId], references: [id])
-  payment   BundlePayment? @relation(fields: [paymentId], references: [id])
-  bundle    Bundle         @relation(fields: [bundleId], references: [id])
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+model BundleContent {
+  id        String   @id @default(uuid())
+  bundleId  String
+  screenId  String
+  url       String
+  bundle    Bundle   @relation(fields: [bundleId], references: [id])
+  screen    Screen   @relation(fields: [screenId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum CAMPAIGN_TYPE {

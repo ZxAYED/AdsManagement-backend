@@ -13,25 +13,74 @@ const stripe = new Stripe(process.env.STRIPE_SECRET as string, {
 
 const paymentSearchableFields = ["transactionId", "status"];
 
+// const myselfPayments = async (userId: string, query: any) => {
+//   // 1️⃣ Pagination values
+//   const { page, limit, skip, sortBy, sortOrder } =
+//     paginationHelper.calculatePagination(query);
+
+//   // 2️⃣ Build dynamic filters from query
+//   let whereConditions = buildDynamicFilters(query, paymentSearchableFields);
+
+//   // 3️⃣ Filter by userId
+//   whereConditions = {
+//     ...whereConditions,
+//     customerId: userId,
+//     status: { not: "pending" },
+//   };
+//   // 4️⃣ Total count
+//   const total = await prisma.bundlePayment.count({ where: whereConditions });
+
+//   // 5️⃣ Fetch data with relations
+//   const result = await prisma.bundlePayment.findMany({
+//     where: whereConditions,
+//     skip,
+//     take: limit,
+//     orderBy: sortBy
+//       ? { [sortBy]: sortOrder === "asc" ? "asc" : "desc" }
+//       : { createdAt: "desc" },
+//     include: {
+//       user: {
+//         select: {
+//           id: true,
+//           first_name: true,
+//           last_name: true,
+//           email: true,
+//         },
+//       },
+//       bundle: {
+//         include: {
+//           screens: true, // nested include
+//         },
+//       },
+//     },
+//   });
+
+//   // 6️⃣ Meta info
+//   const meta = {
+//     page,
+//     limit,
+//     total,
+//     totalPages: Math.ceil(total / limit),
+//   };
+
+//   return { data: result, meta };
+// };
+
 const myselfPayments = async (userId: string, query: any) => {
-  // 1️⃣ Pagination values
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
 
-  // 2️⃣ Build dynamic filters from query
   let whereConditions = buildDynamicFilters(query, paymentSearchableFields);
 
-  // 3️⃣ Filter by userId
   whereConditions = {
     ...whereConditions,
     customerId: userId,
     status: { not: "pending" },
   };
-  // 4️⃣ Total count
+
   const total = await prisma.bundlePayment.count({ where: whereConditions });
 
-  // 5️⃣ Fetch data with relations
-  const result = await prisma.bundlePayment.findMany({
+  const payments = await prisma.bundlePayment.findMany({
     where: whereConditions,
     skip,
     take: limit,
@@ -40,31 +89,32 @@ const myselfPayments = async (userId: string, query: any) => {
       : { createdAt: "desc" },
     include: {
       user: {
-        select: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          email: true,
-        },
+        select: { id: true, first_name: true, last_name: true, email: true },
       },
       bundle: {
-        include: {
-          screens: true, // nested include
-        },
+        include: { screens: true },
       },
     },
   });
 
-  // 6️⃣ Meta info
-  const meta = {
-    page,
-    limit,
-    total,
-    totalPages: Math.ceil(total / limit),
-  };
+  // 🔹 Fetch BundleContent details for each payment
+  const paymentsWithContent = await Promise.all(
+    payments.map(async (payment) => {
+      const contents = await prisma.bundleContent.findMany({
+        where: { id: { in: payment.contentIds } },
+        include:{
+          screen:true
+        }
+      });
+      return { ...payment, contents };
+    })
+  );
 
-  return { data: result, meta };
+  const meta = { page, limit, total, totalPages: Math.ceil(total / limit) };
+
+  return { data: paymentsWithContent, meta };
 };
+
 
 const myselfCustomPayments = async (userId: string, query: any) => {
   // 1️⃣ Pagination values
@@ -266,7 +316,87 @@ const getAllBundlePayments = async (query: any) => {
 
 
 
+// const checkoutBundle = async (data: any) => {
+//   console.log("🚀 ~ checkoutBundle ~ data:", data)
+  
+//   // return await prisma.$transaction(async (tx) => {
+//   //   // 1️⃣ Validate customer
+//   //   const user = await tx.user.findUnique({
+//   //     where: { id: data.customerId },
+//   //   });
+//   //   if (!user) throw new AppError(status.NOT_FOUND, "User not found");
+
+//   //   // 2️⃣ Validate bundle
+//   //   const bundle = await tx.bundle.findUnique({
+//   //     where: { id: data.bundleId },
+//   //   });
+//   //   if (!bundle) throw new AppError(status.NOT_FOUND, "Bundle not found");
+
+//   //   // 3️⃣ Calculate campaign end date
+//   //   const endDate = calculateEndDate(data.startDate, bundle.duration);
+
+//   //   // 4️⃣ Create campaign record
+//   //   const campaign = await tx.bundleCampaign.create({
+//   //     data: {
+//   //       bundleId: bundle.id,
+//   //       customerId: data.customerId,
+//   //       status: CAMPAIGN_STATUS.notPaid,
+//   //       type: CAMPAIGN_TYPE.bundle,
+//   //       contentUrl: data.contentUrl,
+//   //       startDate: new Date(data.startDate),
+//   //       endDate,
+//   //     },
+//   //   });
+
+//   //   // 5️⃣ Create payment record
+//   //   const payment = await tx.bundlePayment.create({
+//   //     data: {
+//   //       customerId: data.customerId,
+//   //       bundleId: bundle.id,
+//   //       amount: bundle.price,
+//   //       status: "pending",
+//   //     },
+//   //   });
+
+//   //   // 6️⃣ Create Stripe checkout session
+//   //   const session = await stripe.checkout.sessions.create({
+//   //     payment_method_types: ["card"],
+//   //     mode: "payment",
+//   //     line_items: [
+//   //       {
+//   //         price_data: {
+//   //           currency: "usd",
+//   //           product_data: {
+//   //             name: bundle.bundle_name,
+//   //             description: `Duration: ${bundle.duration}, Location: ${bundle.location}`,
+//   //           },
+//   //           unit_amount: Math.round(bundle.price * 100), // Stripe requires amount in cents
+//   //         },
+//   //         quantity: 1,
+//   //       },
+//   //     ],
+//   //     customer_email: user.email,
+//   //     success_url: `${process.env.FRONTEND_URL}/payment-success/${payment.id}`,
+//   //     cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+//   //     metadata: {
+//   //       paymentId: payment.id,
+//   //       campaignId: campaign.id,
+//   //       paymentType: "bundle",
+//   //     },
+//   //   });
+
+//   //   // 7️⃣ Return checkout session URL and payment ID
+//   //   return {
+//   //     url: session.url,
+//   //     paymentId: payment.id,
+//   //   };
+//   // });
+// };
+
+
 const checkoutBundle = async (data: any) => {
+  console.log("🚀 ~ checkoutBundle ~ data:", data);
+
   return await prisma.$transaction(async (tx) => {
     // 1️⃣ Validate customer
     const user = await tx.user.findUnique({
@@ -283,18 +413,25 @@ const checkoutBundle = async (data: any) => {
     // 3️⃣ Calculate campaign end date
     const endDate = calculateEndDate(data.startDate, bundle.duration);
 
-    // 4️⃣ Create campaign record
-    const campaign = await tx.bundleCampaign.create({
-      data: {
-        bundleId: bundle.id,
-        customerId: data.customerId,
-        status: CAMPAIGN_STATUS.notPaid,
-        type: CAMPAIGN_TYPE.bundle,
-        contentUrl: data.contentUrl,
-        startDate: new Date(data.startDate),
-        endDate,
-      },
-    });
+    // 4️⃣ Save all uploaded content in BundleContent table
+    const savedContents = [];
+    for (const c of data.content) {
+      const saved = await tx.bundleContent.create({
+        data: {
+          bundleId: data.bundleId,
+          screenId: c.screenId,
+          url: c.url,
+        },
+      });
+      savedContents.push(saved);
+    }
+
+    if (savedContents.length === 0) {
+      throw new AppError(status.BAD_REQUEST, "No content uploaded");
+    }
+
+    // Get all content IDs
+    const contentIds = savedContents.map((c) => c.id);
 
     // 5️⃣ Create payment record
     const payment = await tx.bundlePayment.create({
@@ -303,10 +440,25 @@ const checkoutBundle = async (data: any) => {
         bundleId: bundle.id,
         amount: bundle.price,
         status: "pending",
+        contentIds, // save all content IDs
       },
     });
 
-    // 6️⃣ Create Stripe checkout session
+    // 6️⃣ Create campaign record
+    const campaign = await tx.bundleCampaign.create({
+      data: {
+        bundleId: bundle.id,
+        customerId: data.customerId,
+        paymentId: payment.id,
+        status: CAMPAIGN_STATUS.notPaid,
+        type: CAMPAIGN_TYPE.bundle,
+        contentIds, // save all content IDs
+        startDate: new Date(data.startDate),
+        endDate,
+      },
+    });
+
+    // 7️⃣ Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -318,7 +470,7 @@ const checkoutBundle = async (data: any) => {
               name: bundle.bundle_name,
               description: `Duration: ${bundle.duration}, Location: ${bundle.location}`,
             },
-            unit_amount: Math.round(bundle.price * 100), // Stripe requires amount in cents
+            unit_amount: Math.round(bundle.price * 100),
           },
           quantity: 1,
         },
@@ -333,13 +485,16 @@ const checkoutBundle = async (data: any) => {
       },
     });
 
-    // 7️⃣ Return checkout session URL and payment ID
+    // 8️⃣ Return session URL, payment, campaign, and content IDs
     return {
       url: session.url,
       paymentId: payment.id,
+      campaignId: campaign.id,
+      contentIds,
     };
   });
 };
+
 
 
 
