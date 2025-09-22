@@ -9,24 +9,24 @@ const router = express.Router();
 
 router.get(
   "/available-bundles",
-  RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
+  // RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
   BundleController.getAvailableBundlesFromDB
 );
 
 router.get(
   "/",
-  RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
+  // RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
   BundleController.getAll
 );
 
 router.get(
   "/get-single-by-id/:id",
-  RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
+  // RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
   BundleController.getSingleById
 );
 router.get(
   "/get-single-by-slug/:slug",
-  RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
+  // RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
   BundleController.getBySlug
 );
 
