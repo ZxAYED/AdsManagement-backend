@@ -90,6 +90,38 @@ const getSingleBundleFromDB = async (slug: string) => {
     totalNumberOfBuy: successPaymentCount,
   };
 };
+const getSingleBundleByIdFromDB = async (id: string) => {
+  // Step 1: Check if bundle exists and is not deleted
+  const isBundleExist = await prisma.bundle.findFirst({
+    where: { id:id, isDeleted: false },
+  });
+
+  if (!isBundleExist) {
+    throw new AppError(status.NOT_FOUND, "Bundle not found");
+  }
+
+  // Step 2: Get bundle with screens
+  const bundle = await prisma.bundle.findUnique({
+    where: { id },
+    include: {
+      screens: true,
+    },
+  });
+
+  // Step 3: Count only successful payments for the bundle
+  const successPaymentCount = await prisma.bundlePayment.count({
+    where: {
+      bundleId: bundle?.id,
+      status: "success",
+    },
+  });
+
+  // Step 4: Add totalNumberOfBuy field
+  return {
+    ...bundle,
+    totalNumberOfBuy: successPaymentCount,
+  };
+};
 
 const postBundleIntoDB = async (data: {
   bundle_name: string;
@@ -270,4 +302,5 @@ export const BundleService = {
   updateBundleIntoDB,
   deleteBundleFromDB,
   getAvailableBundlesFromDB,
+  getSingleBundleByIdFromDB
 };

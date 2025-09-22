@@ -27,6 +27,15 @@ const getBySlug = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const getSingleById = catchAsync(async (req: Request, res: Response) => {
+  const result = await BundleService.getSingleBundleByIdFromDB(req.params.id);
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Bundle fetched successfully",
+    data: result,
+  });
+});
 
 const create = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
@@ -168,5 +177,6 @@ export const BundleController = {
   create,
   update,
   remove,
-  getAvailableBundlesFromDB
+  getAvailableBundlesFromDB,
+  getSingleById
 };
