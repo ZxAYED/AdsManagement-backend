@@ -20,7 +20,12 @@ router.get(
 );
 
 router.get(
-  "/:slug",
+  "/get-single-by-id/:id",
+  RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
+  BundleController.getSingleById
+);
+router.get(
+  "/get-single-by-slug/:slug",
   RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
   BundleController.getBySlug
 );
