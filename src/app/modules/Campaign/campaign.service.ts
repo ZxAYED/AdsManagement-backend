@@ -5,19 +5,15 @@ import { CAMPAIGN_STATUS } from "@prisma/client";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
 
-const getAllBundleCampaignFromDB = async (options: any) => {
-  const { page, limit, skip, sortBy, sortOrder } =
-    paginationHelper.calculatePagination(options);
 
-  const whereConditions = buildDynamicFilters(options, [""]);
+const getAllBundleCampaignFromDB = async (
+  query: any,
+) => {
+  // 1️⃣ Build dynamic filters
+  const whereConditions = { ...buildDynamicFilters(query, [])};
 
-  // 1️⃣ Total campaigns
-  const total = await prisma.bundleCampaign.count({
-    where: whereConditions,
-  });
-
-  // 2️⃣ Fetch campaigns with relations
-  const campaigns = await prisma.bundleCampaign.findMany({
+  // 2️⃣ Total campaigns
+  const totalCampaign = await prisma.bundleCampaign.count({
     where: {
       ...whereConditions,
       status: {
@@ -28,57 +24,97 @@ const getAllBundleCampaignFromDB = async (options: any) => {
         ],
       },
     },
-    include: {
-      payment: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              first_name: true,
-              last_name: true,
-              email: true,
-            },
-          },
-        },
-      },
-      bundle: {
-        include: { screens: true },
+  });
+
+  // 3️⃣ Fetch campaigns with payment info
+  const result = await prisma.bundleCampaign.findMany({
+    where: {
+      ...whereConditions,
+      status: {
+        in: [
+          CAMPAIGN_STATUS.pending,
+          CAMPAIGN_STATUS.running,
+          CAMPAIGN_STATUS.completed,
+        ],
       },
     },
-    skip,
-    take: limit,
+    include: { payment: true },
     orderBy: { createdAt: "desc" },
   });
 
-  // 3️⃣ Attach full content details (from payment.contentIds)
-  const campaignsWithContents = await Promise.all(
-    campaigns.map(async (campaign) => {
-      const contentIds = campaign.payment?.contentIds ?? [];
-
-      const contents = await prisma.bundleContent.findMany({
-        where: { id: { in: contentIds } },
-        include: {
-          screen: true, // screen details সহ
-        },
-      });
-
-      return {
-        ...campaign,
-        contents,
-      };
+  // 4️⃣ Fetch BundleContent details for each campaign
+  const resultWithContents = await Promise.all(
+    result.map(async (campaign) => {
+      let contents: any[] = [];
+      if (campaign.payment?.contentIds?.length) {
+        contents = await prisma.bundleContent.findMany({
+          where: { id: { in: campaign.payment.contentIds } },
+          include: {
+            screen: true,
+          },
+        });
+      }
+      return { ...campaign, contents }; // 💡 contents alada property
     })
   );
 
-  // 4️⃣ Meta
-  const meta = {
-    page,
-    limit,
-    total,
-    totalPages: Math.ceil(total / limit),
-  };
+  // 5️⃣ Month names
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
-  return { data: campaignsWithContents, meta };
+  // 6️⃣ Total revenue
+  const totalRevenue = resultWithContents.reduce(
+    (sum, campaign) => sum + (campaign.payment?.amount || 0),
+    0
+  );
+
+  // 7️⃣ Monthly revenue (object)
+  const monthlyRevenueObj = resultWithContents.reduce((acc, campaign) => {
+    const createdAt = new Date(campaign.createdAt);
+    const year = createdAt.getFullYear();
+    const monthName = createdAt.toLocaleString("en-US", { month: "long" });
+
+    if (!acc[year]) {
+      acc[year] = {};
+      monthNames.forEach((m) => (acc[year][m] = 0));
+    }
+
+    acc[year][monthName] += campaign.payment?.amount || 0;
+    return acc;
+  }, {} as Record<number, Record<string, number>>);
+
+  // Convert to array for frontend
+  const monthlyRevenue = Object.entries(monthlyRevenueObj).map(
+    ([year, months]) => ({
+      year: Number(year),
+      months: Object.entries(months).map(([month, cost]) => ({ month, cost })),
+    })
+  );
+
+  return {
+    data: resultWithContents,
+    meta: {
+      totalCampaign,
+      totalCost: totalRevenue,
+      monthlyCost: monthlyRevenue,
+    },
+  };
 };
+
+
+
 const getSingleBundleCampaignFromDB = async (id: string) => {
   const isCampaignExists = await prisma.bundleCampaign.findUnique({
     where: { id },
