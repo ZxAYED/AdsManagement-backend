@@ -38,7 +38,7 @@ const getAllBundleCampaignFromDB = async (
         ],
       },
     },
-    include: { payment: true },
+    include: { payment: true , bundle: true, customer:true},
     orderBy: { createdAt: "desc" },
   });
 
