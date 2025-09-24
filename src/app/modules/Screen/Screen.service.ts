@@ -20,7 +20,7 @@ const getAllScreenFromDB = async (query: any) => {
     where: {
       ...whereConditions,
       isDeleted: false,
-      availability: SCREEN_AVAILABILITY.available,
+      // availability: SCREEN_AVAILABILITY.available,
     },
     skip,
     take: limit,
