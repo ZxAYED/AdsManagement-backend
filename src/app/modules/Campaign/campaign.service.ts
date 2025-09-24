@@ -10,21 +10,33 @@ const getAllBundleCampaignFromDB = async (
   query: any,
 ) => {
   // 1️⃣ Build dynamic filters
-  const whereConditions = { ...buildDynamicFilters(query, [])};
+  const whereConditions = { ...buildDynamicFilters(query, []) };
 
-  // 2️⃣ Total campaigns
-  const totalCampaign = await prisma.bundleCampaign.count({
-    where: {
-      ...whereConditions,
-      status: {
-        in: [
-          CAMPAIGN_STATUS.pending,
-          CAMPAIGN_STATUS.running,
-          CAMPAIGN_STATUS.completed,
-        ],
-      },
-    },
-  });
+  // 2️⃣ Count campaigns by status
+  const [totalCampaign, totalPending, totalRunning, totalCompleted] =
+    await Promise.all([
+      prisma.bundleCampaign.count({
+        where: {
+          ...whereConditions,
+          status: {
+            in: [
+              CAMPAIGN_STATUS.pending,
+              CAMPAIGN_STATUS.running,
+              CAMPAIGN_STATUS.completed,
+            ],
+          },
+        },
+      }),
+      prisma.bundleCampaign.count({
+        where: { ...whereConditions,  status: CAMPAIGN_STATUS.pending },
+      }),
+      prisma.bundleCampaign.count({
+        where: { ...whereConditions,  status: CAMPAIGN_STATUS.running },
+      }),
+      prisma.bundleCampaign.count({
+        where: { ...whereConditions,  status: CAMPAIGN_STATUS.completed },
+      }),
+    ]);
 
   // 3️⃣ Fetch campaigns with payment info
   const result = await prisma.bundleCampaign.findMany({
@@ -38,7 +50,7 @@ const getAllBundleCampaignFromDB = async (
         ],
       },
     },
-    include: { payment: true , bundle: true, customer:true},
+    include: { payment: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -49,9 +61,7 @@ const getAllBundleCampaignFromDB = async (
       if (campaign.payment?.contentIds?.length) {
         contents = await prisma.bundleContent.findMany({
           where: { id: { in: campaign.payment.contentIds } },
-          include: {
-            screen: true,
-          },
+          include: { screen: true },
         });
       }
       return { ...campaign, contents }; // 💡 contents alada property
@@ -60,18 +70,8 @@ const getAllBundleCampaignFromDB = async (
 
   // 5️⃣ Month names
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
   ];
 
   // 6️⃣ Total revenue
@@ -103,17 +103,25 @@ const getAllBundleCampaignFromDB = async (
     })
   );
 
+  // 8️⃣ Meta with counts & revenue
   return {
     data: resultWithContents,
     meta: {
-      totalCampaign,
-      totalCost: totalRevenue,
-      monthlyCost: monthlyRevenue,
+      counts: {
+        totalCampaign,
+        byStatus: {
+          pending: totalPending,
+          running: totalRunning,
+          completed: totalCompleted,
+        },
+      },
+      revenue: {
+        totalRevenue,
+        monthlyRevenue,
+      },
     },
   };
 };
-
-
 
 const getSingleBundleCampaignFromDB = async (id: string) => {
   const isCampaignExists = await prisma.bundleCampaign.findUnique({
@@ -334,20 +342,32 @@ const myselfAllBundleCampaignFromDB = async (
   // 1️⃣ Build dynamic filters
   const whereConditions = { ...buildDynamicFilters(query, []), customerId };
 
-  // 2️⃣ Total campaigns
-  const totalCampaign = await prisma.bundleCampaign.count({
-    where: {
-      ...whereConditions,
-      customerId,
-      status: {
-        in: [
-          CAMPAIGN_STATUS.pending,
-          CAMPAIGN_STATUS.running,
-          CAMPAIGN_STATUS.completed,
-        ],
-      },
-    },
-  });
+  // 2️⃣ Count campaigns by status
+  const [totalCampaign, totalPending, totalRunning, totalCompleted] =
+    await Promise.all([
+      prisma.bundleCampaign.count({
+        where: {
+          ...whereConditions,
+          customerId,
+          status: {
+            in: [
+              CAMPAIGN_STATUS.pending,
+              CAMPAIGN_STATUS.running,
+              CAMPAIGN_STATUS.completed,
+            ],
+          },
+        },
+      }),
+      prisma.bundleCampaign.count({
+        where: { ...whereConditions, customerId, status: CAMPAIGN_STATUS.pending },
+      }),
+      prisma.bundleCampaign.count({
+        where: { ...whereConditions, customerId, status: CAMPAIGN_STATUS.running },
+      }),
+      prisma.bundleCampaign.count({
+        where: { ...whereConditions, customerId, status: CAMPAIGN_STATUS.completed },
+      }),
+    ]);
 
   // 3️⃣ Fetch campaigns with payment info
   const result = await prisma.bundleCampaign.findMany({
@@ -373,9 +393,7 @@ const myselfAllBundleCampaignFromDB = async (
       if (campaign.payment?.contentIds?.length) {
         contents = await prisma.bundleContent.findMany({
           where: { id: { in: campaign.payment.contentIds } },
-          include: {
-            screen: true,
-          },
+          include: { screen: true },
         });
       }
       return { ...campaign, contents }; // 💡 contents alada property
@@ -384,18 +402,8 @@ const myselfAllBundleCampaignFromDB = async (
 
   // 5️⃣ Month names
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
   ];
 
   // 6️⃣ Total revenue
@@ -427,107 +435,27 @@ const myselfAllBundleCampaignFromDB = async (
     })
   );
 
+  // 8️⃣ Meta with counts & revenue
   return {
     data: resultWithContents,
     meta: {
-      totalCampaign,
-      totalCost: totalRevenue,
-      monthlyCost: monthlyRevenue,
+      counts: {
+        totalCampaign,
+        byStatus: {
+          pending: totalPending,
+          running: totalRunning,
+          completed: totalCompleted,
+        },
+      },
+      revenue: {
+        totalRevenue,
+        monthlyRevenue,
+      },
     },
   };
 };
 
-// const myselfAllCustomCampaignFromDB = async (
-//   query: any,
-//   customerId: string
-// ) => {
-//   const whereConditions = { ...buildDynamicFilters(query, []), customerId };
 
-//   const totalCampaign = await prisma.customCampaign.count({
-//     where: {
-//       ...whereConditions,
-//       status: {
-//         in: [
-//           CAMPAIGN_STATUS.pending,
-//           CAMPAIGN_STATUS.running,
-//           CAMPAIGN_STATUS.completed,
-//         ],
-//       },
-//     },
-//   });
-
-//   const result = await prisma.customCampaign.findMany({
-//     where: {
-//       ...whereConditions,
-//       customerId,
-//       status: {
-//         in: [
-//           CAMPAIGN_STATUS.pending,
-//           CAMPAIGN_STATUS.running,
-//           CAMPAIGN_STATUS.completed,
-//         ],
-//       },
-//     },
-//     include: { CustomPayment: true },
-//     orderBy: { createdAt: "desc" },
-//   });
-
-//   const monthNames = [
-//     "January",
-//     "February",
-//     "March",
-//     "April",
-//     "May",
-//     "June",
-//     "July",
-//     "August",
-//     "September",
-//     "October",
-//     "November",
-//     "December",
-//   ];
-
-//   const totalRevenue = result.reduce(
-//     (sum, campaign) =>
-//       sum + campaign.CustomPayment.reduce((s, p) => s + (p.amount || 0), 0),
-//     0
-//   );
-
-//   const monthlyRevenueObj = result.reduce((acc, campaign) => {
-//     const createdAt = new Date(campaign.createdAt);
-//     const year = createdAt.getFullYear();
-//     const monthName = createdAt.toLocaleString("en-US", { month: "long" });
-
-//     if (!acc[year]) {
-//       acc[year] = {};
-//       monthNames.forEach((m) => (acc[year][m] = 0));
-//     }
-
-//     const campaignTotal = campaign.CustomPayment.reduce(
-//       (s, p) => s + (p.amount || 0),
-//       0
-//     );
-//     acc[year][monthName] += campaignTotal;
-
-//     return acc;
-//   }, {} as Record<number, Record<string, number>>);
-
-//   const monthlyRevenue = Object.entries(monthlyRevenueObj).map(
-//     ([year, months]) => ({
-//       year: Number(year),
-//       months: Object.entries(months).map(([month, cost]) => ({ month, cost })),
-//     })
-//   );
-
-//   return {
-//     data: result,
-//     meta: {
-//       totalCampaign,
-//       totalCost: totalRevenue,
-//       monthlyCost: monthlyRevenue,
-//     },
-//   };
-// };
 
 const myselfAllCustomCampaignFromDB = async (
   query: any,
