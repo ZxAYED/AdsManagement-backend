@@ -50,7 +50,7 @@ const getAllBundleCampaignFromDB = async (
         ],
       },
     },
-    include: { payment: true },
+    include: { payment: true , bundle:true},
     orderBy: { createdAt: "desc" },
   });
 
