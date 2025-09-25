@@ -418,7 +418,7 @@ const checkoutCustom = async (data: any) => {
     const endDate = new Date(data.endDate);
 
     const durationInMs = endDate.getTime() - startDate.getTime();
-    const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24)) + 1;
+    const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24));
 
     const totalAmount = screens.reduce(
       (sum, s) => sum + s.price * durationInDays,
