@@ -6,7 +6,12 @@ import status from "http-status";
 
 const getAllBundleCampaignFromDB = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await CampaignService.getAllBundleCampaignFromDB(req.query);
+    const { dateFilter, ...restQuery } = req.query; // ✅ extract dateFilter separately
+    const query = { ...restQuery }; // ✅ this is the cleaned query without dateFilter
+    const result = await CampaignService.getAllBundleCampaignFromDB(
+      query,
+      dateFilter as string
+    );
     sendResponse(res, {
       statusCode: status.OK,
       success: true,
@@ -17,7 +22,9 @@ const getAllBundleCampaignFromDB = catchAsync(
 );
 const getSingleBundleCampaignFromDB = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await CampaignService.getSingleBundleCampaignFromDB(req.params.id);
+    const result = await CampaignService.getSingleBundleCampaignFromDB(
+      req.params.id
+    );
     sendResponse(res, {
       statusCode: status.OK,
       success: true,
@@ -28,7 +35,9 @@ const getSingleBundleCampaignFromDB = catchAsync(
 );
 const getSingleCustomCampaignFromDB = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await CampaignService.getSingleCustomCampaignFromDB(req.params.id);
+    const result = await CampaignService.getSingleCustomCampaignFromDB(
+      req.params.id
+    );
     sendResponse(res, {
       statusCode: status.OK,
       success: true,
@@ -39,7 +48,13 @@ const getSingleCustomCampaignFromDB = catchAsync(
 );
 const getAllCustomCampaignFromDB = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await CampaignService.getAllCustomCampaignFromDB(req.query);
+    const { dateFilter, ...restQuery } = req.query; // ✅ extract dateFilter separately
+    const query = { ...restQuery }; // ✅ this is the cleaned query without dateFilter
+
+    const result = await CampaignService.getAllCustomCampaignFromDB(
+      query,
+      dateFilter as string
+    );
     sendResponse(res, {
       statusCode: status.OK,
       success: true,
@@ -51,9 +66,16 @@ const getAllCustomCampaignFromDB = catchAsync(
 
 const myselfAllBundleCampaignFromDB = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
+    console.log(req.query, "controller....");
+
+    const { dateFilter, ...restQuery } = req.query; // ✅ extract dateFilter separately
+    const query = { ...restQuery }; // ✅ this is the cleaned query without dateFilter
+
+    // const dateFilter = req.query.dateFilter ? req.query.dateFilter : "";
     const result = await CampaignService.myselfAllBundleCampaignFromDB(
-      req.query,
-      req.user?.id as string
+      query,
+      req.user?.id as string,
+      dateFilter as string
     );
     sendResponse(res, {
       statusCode: status.OK,
@@ -62,13 +84,16 @@ const myselfAllBundleCampaignFromDB = catchAsync(
       data: result,
     });
   }
-)
+);
 
 const myselfAllCustomCampaignFromDB = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
+    const { dateFilter, ...restQuery } = req.query; // ✅ extract dateFilter separately
+    const query = { ...restQuery }; // ✅ this is the cleaned query without dateFilter
     const result = await CampaignService.myselfAllCustomCampaignFromDB(
-      req.query,
-      req.user?.id as string
+      query,
+      req.user?.id as string,
+      dateFilter as string
     );
     sendResponse(res, {
       statusCode: status.OK,
@@ -77,15 +102,13 @@ const myselfAllCustomCampaignFromDB = catchAsync(
       data: result,
     });
   }
-)
+);
 
-
-
-export const campaignController ={
-    getAllBundleCampaignFromDB,
-    getAllCustomCampaignFromDB,
-    myselfAllBundleCampaignFromDB,
-    myselfAllCustomCampaignFromDB,
-    getSingleBundleCampaignFromDB,
-    getSingleCustomCampaignFromDB
-}
+export const campaignController = {
+  getAllBundleCampaignFromDB,
+  getAllCustomCampaignFromDB,
+  myselfAllBundleCampaignFromDB,
+  myselfAllCustomCampaignFromDB,
+  getSingleBundleCampaignFromDB,
+  getSingleCustomCampaignFromDB,
+};
