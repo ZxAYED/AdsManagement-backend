@@ -4,15 +4,33 @@ import { CAMPAIGN_STATUS } from "@prisma/client";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
 import { paginationHelper } from "../../../helpers/paginationHelper";
+import getDateRange from "../../../utils/getDateRange";
 
-
-const getAllBundleCampaignFromDB = async (query: any) => {
+const getAllBundleCampaignFromDB = async (query: any, dateFilter?: string) => {
   // 1️⃣ Build dynamic filters
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
 
   // 2️⃣ Build dynamic filters from query
   let whereConditions = buildDynamicFilters(query, []);
+  if (query.startDate && query.endDate) {
+    whereConditions.startDate = { gte: new Date(query.startDate) };
+    whereConditions.endDate = { lte: new Date(query.endDate) };
+  } else if (query.startDate) {
+    whereConditions.startDate = { gte: new Date(query.startDate) };
+  } else if (query.endDate) {
+    whereConditions.endDate = { lte: new Date(query.endDate) };
+  }
+
+  if (dateFilter) {
+    const { start } = getDateRange(dateFilter);
+    if (start) {
+      whereConditions.startDate = {
+        ...(whereConditions.startDate || {}),
+        gte: start,
+      };
+    }
+  }
 
   // 2️⃣ Count campaigns by status
   const [totalCampaign, totalPending, totalRunning, totalCompleted] =
@@ -65,7 +83,7 @@ const getAllBundleCampaignFromDB = async (query: any) => {
       },
     },
     orderBy: { [sortBy || "createdAt"]: sortOrder || "desc" }, // 🔹 dynamic sorting
-    skip,   // 🔹 pagination skip
+    skip, // 🔹 pagination skip
     take: limit, // 🔹 pagination limit
   });
 
@@ -85,8 +103,18 @@ const getAllBundleCampaignFromDB = async (query: any) => {
 
   // 5️⃣ Month names
   const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   // 6️⃣ Total revenue
@@ -142,8 +170,6 @@ const getAllBundleCampaignFromDB = async (query: any) => {
   };
 };
 
-
-
 const getSingleBundleCampaignFromDB = async (id: string) => {
   const isCampaignExists = await prisma.bundleCampaign.findUnique({
     where: { id },
@@ -173,21 +199,39 @@ const getSingleBundleCampaignFromDB = async (id: string) => {
   const contents = await prisma.bundleContent.findMany({
     where: { id: { in: isCampaignExists.contentIds } },
     include: {
-      screen: true, // screen details সহ
+      screen: true, 
     },
   });
 
   return { ...isCampaignExists, contents };
 };
 
-
-
-const getAllCustomCampaignFromDB = async (query: any) => {
+const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
 
   // 2️⃣ Build dynamic filters from query
   let whereConditions = buildDynamicFilters(query, []);
+  if (query.startDate && query.endDate) {
+    whereConditions.startDate = { gte: new Date(query.startDate) };
+    whereConditions.endDate = { lte: new Date(query.endDate) };
+  } else if (query.startDate) {
+    whereConditions.startDate = { gte: new Date(query.startDate) };
+  } else if (query.endDate) {
+    whereConditions.endDate = { lte: new Date(query.endDate) };
+  }
+
+  if (dateFilter) {
+    const { start } = getDateRange(dateFilter);
+    console.log({ start });
+
+    if (start) {
+      whereConditions.startDate = {
+        ...(whereConditions.startDate || {}),
+        gte: start,
+      };
+    }
+  }
 
   // 1️⃣ Count campaigns by status
   const [totalCampaign, totalPending, totalRunning, totalCompleted] =
@@ -235,7 +279,7 @@ const getAllCustomCampaignFromDB = async (query: any) => {
       CustomPayment: true,
     },
     orderBy: { [sortBy || "createdAt"]: sortOrder || "desc" }, // 🔹 dynamic sorting
-    skip,   // 🔹 pagination
+    skip, // 🔹 pagination
     take: limit, // 🔹 pagination
   });
 
@@ -247,20 +291,30 @@ const getAllCustomCampaignFromDB = async (query: any) => {
 
       const contents = await prisma.customContent.findMany({
         where: { id: { in: uniqueContentIds } },
-        include: { screen: true }, 
+        include: { screen: true },
       });
 
       return {
         ...campaign,
-        contents, 
+        contents,
       };
     })
   );
 
   // 4️⃣ Revenue calculation
   const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const totalRevenue = campaignsWithContents.reduce(
@@ -321,9 +375,6 @@ const getAllCustomCampaignFromDB = async (query: any) => {
   return { data: campaignsWithContents, meta };
 };
 
-
-
-
 const getSingleCustomCampaignFromDB = async (id: string) => {
   const isCampaignExists = await prisma.customCampaign.findUnique({
     where: { id },
@@ -351,24 +402,48 @@ const getSingleCustomCampaignFromDB = async (id: string) => {
   const contents = await prisma.customContent.findMany({
     where: { id: { in: isCampaignExists.contentIds } },
     include: {
-      screen: true, // screen details সহ
+      screen: true,
     },
   });
 
   return { ...isCampaignExists, contents };
 };
 
-
 const myselfAllBundleCampaignFromDB = async (
   query: any,
-  customerId: string
+  customerId: string,
+  dateFilter?: string
 ) => {
+  // console.log({ dateFilter }, "service");
+
   // 1️⃣ Extract pagination and sorting info from query
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
 
   // 2️⃣ Build dynamic filters from query
   let whereConditions = buildDynamicFilters(query, []);
+
+  // if startDate and endDtae comes
+  if (query.startDate && query.endDate) {
+    whereConditions.startDate = { gte: new Date(query.startDate) };
+    whereConditions.endDate = { lte: new Date(query.endDate) };
+  } else if (query.startDate) {
+    whereConditions.startDate = { gte: new Date(query.startDate) };
+  } else if (query.endDate) {
+    whereConditions.endDate = { lte: new Date(query.endDate) };
+  }
+
+  if (dateFilter) {
+    const { start } = getDateRange(dateFilter);
+    console.log({ start });
+
+    if (start) {
+      whereConditions.startDate = {
+        ...(whereConditions.startDate || {}),
+        gte: start,
+      };
+    }
+  }
 
   // 3️⃣ Count campaigns by status (total, pending, running, completed)
   const [totalCampaign, totalPending, totalRunning, totalCompleted] =
@@ -387,13 +462,25 @@ const myselfAllBundleCampaignFromDB = async (
         },
       }),
       prisma.bundleCampaign.count({
-        where: { ...whereConditions, customerId, status: CAMPAIGN_STATUS.pending },
+        where: {
+          ...whereConditions,
+          customerId,
+          status: CAMPAIGN_STATUS.pending,
+        },
       }),
       prisma.bundleCampaign.count({
-        where: { ...whereConditions, customerId, status: CAMPAIGN_STATUS.running },
+        where: {
+          ...whereConditions,
+          customerId,
+          status: CAMPAIGN_STATUS.running,
+        },
       }),
       prisma.bundleCampaign.count({
-        where: { ...whereConditions, customerId, status: CAMPAIGN_STATUS.completed },
+        where: {
+          ...whereConditions,
+          customerId,
+          status: CAMPAIGN_STATUS.completed,
+        },
       }),
     ]);
 
@@ -412,11 +499,13 @@ const myselfAllBundleCampaignFromDB = async (
     },
     include: {
       payment: true,
-      customer: true,
+      customer: {
+        select: { id: true, first_name: true, last_name: true, email: true },
+      },
       bundle: true,
     },
     orderBy: { [sortBy || "createdAt"]: sortOrder || "desc" }, // dynamic sorting
-    skip,   // pagination offset
+    skip, // pagination offset
     take: limit, // pagination limit
   });
 
@@ -436,8 +525,18 @@ const myselfAllBundleCampaignFromDB = async (
 
   // 6️⃣ Month names for consistent reporting
   const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   // 7️⃣ Calculate total revenue
@@ -495,17 +594,37 @@ const myselfAllBundleCampaignFromDB = async (
   };
 };
 
-
-
 const myselfAllCustomCampaignFromDB = async (
   query: any,
-  customerId: string
+  customerId: string,
+  dateFilter?: string
 ) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
 
   // 2️⃣ Build dynamic filters from query
   let whereConditions = buildDynamicFilters(query, []);
+
+  if (query.startDate && query.endDate) {
+    whereConditions.startDate = { gte: new Date(query.startDate) };
+    whereConditions.endDate = { lte: new Date(query.endDate) };
+  } else if (query.startDate) {
+    whereConditions.startDate = { gte: new Date(query.startDate) };
+  } else if (query.endDate) {
+    whereConditions.endDate = { lte: new Date(query.endDate) };
+  }
+
+  if (dateFilter) {
+    const { start } = getDateRange(dateFilter);
+    // console.log({ start });
+
+    if (start) {
+      whereConditions.startDate = {
+        ...(whereConditions.startDate || {}),
+        gte: start,
+      };
+    }
+  }
 
   // 1️⃣ Count campaigns by status
   const [totalCampaign, totalPending, totalRunning, totalCompleted] =
@@ -546,7 +665,6 @@ const myselfAllCustomCampaignFromDB = async (
       }),
     ]);
 
-  // 2️⃣ Fetch campaigns
   const campaigns = await prisma.customCampaign.findMany({
     where: {
       ...whereConditions,
@@ -566,7 +684,9 @@ const myselfAllCustomCampaignFromDB = async (
       screens: true,
       CustomPayment: true,
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { [sortBy || "createdAt"]: sortOrder || "desc" },
+    skip, // pagination offset
+    take: limit, // pagination limit
   });
 
   const campaignsWithContents = await Promise.all(
@@ -640,10 +760,10 @@ const myselfAllCustomCampaignFromDB = async (
 
   // 5️⃣ Meta info
   const meta = {
-     page,
-      limit,
-      total: totalCampaign,
-      totalPages: Math.ceil(totalCampaign / limit),
+    page,
+    limit,
+    total: totalCampaign,
+    totalPages: Math.ceil(totalCampaign / limit),
     counts: {
       totalCampaign,
       byStatus: {
