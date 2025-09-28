@@ -90,55 +90,6 @@ const getgetSingleBundlePaymentFromDBById = catchAsync(
   }
 );
 
-// const create = catchAsync(
-//   async (req: Request & { user?: any }, res: Response) => {
-//     try {
-//       console.log("📦 Uploaded file:", req.file);
-//       console.log("📄 Body data:", req.body.data);
-
-//       const parsedData = JSON.parse(req.body.data);
-//       console.log("✅ Parsed data:", parsedData);
-
-//       // Ensure file exists
-//       if (!req.file) {
-//         throw new AppError(status.BAD_REQUEST, "File upload is required");
-//       }
-
-//       const fileName = `${Date.now()}_${req.file.originalname}`;
-
-//       // Upload the file to Supabase (image or video)
-//       const contentUrl = await uploadImageToSupabase(req.file, fileName);
-
-//       console.log("✅ Uploaded to Supabase:", contentUrl);
-
-//       fs.unlinkSync(req.file.path);
-
-//       const payload = {
-//         ...parsedData,
-//         customerId: req.user?.id as string,
-//         contentUrl: contentUrl,
-//       };
-
-//       console.log({ payload });
-
-//       // TODO: Replace with your real service call
-//       const result = await paymentService.checkoutBundle(payload);
-
-//       sendResponse(res, {
-//         statusCode: status.CREATED,
-//         success: true,
-//         message: "Media uploaded and payment session created successfully",
-//         data: {
-//           session: result,
-//         },
-//       });
-//     } catch (error: any) {
-//       console.log(error);
-//     }
-//   }
-// );
-
-
 
 const create = catchAsync(
   async (req: Request & { user?: any; files?: any }, res: Response) => {
@@ -195,7 +146,11 @@ const create = catchAsync(
         contentData.push({ screenId, url: uploadedUrl });
 
         // remove local file
-        fs.unlinkSync(file.path);
+        fs.unlink(file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
       }
 
       const payload = {
@@ -223,36 +178,6 @@ const create = catchAsync(
   }
 );
 
-// const createCustomPayment = catchAsync(
-//   async (req: Request & { user?: any }, res: Response) => {
-//     console.log("📦 Uploaded file:", req.file);
-//     const parsedData = JSON.parse(req.body.data);
-
-//     if (!req.file)
-//       throw new AppError(status.BAD_REQUEST, "File upload is required");
-
-//     const fileName = `${Date.now()}_${req.file.originalname}`;
-//     const contentUrl = await uploadImageToSupabase(req.file, fileName);
-//     fs.unlinkSync(req.file.path);
-
-//     const payload = {
-//       ...parsedData,
-//       customerId: req.user?.id as string,
-//       contentUrl,
-//     };
-
-//     console.log({ payload });
-
-//     const result = await paymentService.checkoutCustom(payload);
-
-//     sendResponse(res, {
-//       statusCode: status.CREATED,
-//       success: true,
-//       message: "Custom payment session created",
-//       data: result,
-//     });
-//   }
-// );
 
 
 const createCustomPayment = catchAsync(
@@ -309,7 +234,11 @@ const createCustomPayment = catchAsync(
         contentData.push({ screenId, url: uploadedUrl });
 
         // remove local file
-        fs.unlinkSync(file.path);
+        fs.unlink(file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
       }
 
       const payload = {
