@@ -94,8 +94,8 @@ const getgetSingleBundlePaymentFromDBById = catchAsync(
 const create = catchAsync(
   async (req: Request & { user?: any; files?: any }, res: Response) => {
     try {
-      console.log("📦 Uploaded files:", req.files);
-      console.log("📄 Body data:", req.body.data);
+      // console.log("📦 Uploaded files:", req.files);
+      // console.log("📄 Body data:", req.body.data);
 
       const filesObj = req.files as { [key: string]: Express.Multer.File[] };
 
@@ -104,11 +104,11 @@ const create = catchAsync(
       for (const key in filesObj) {
         totalFiles += filesObj[key].length;
       }
-      console.log("Total files uploaded:", totalFiles);
+      // console.log("Total files uploaded:", totalFiles);
 
       // parse body data
       const parsedData = JSON.parse(req.body.data || "{}");
-      console.log("✅ Parsed data:", parsedData);
+      // console.log("✅ Parsed data:", parsedData);
 
       // find bundle
       const findBundle = await prisma.bundle.findUnique({
@@ -159,7 +159,7 @@ const create = catchAsync(
         content: contentData, // [{ screenId, url }, ...]
       };
 
-      console.log("🚀 Final Payload:", payload);
+      // console.log("🚀 Final Payload:", payload);
 
       const result = await paymentService.checkoutBundle(payload);
 
@@ -183,8 +183,8 @@ const create = catchAsync(
 const createCustomPayment = catchAsync(
   async (req: Request & { user?: any; files?: any }, res: Response) => {
     try {
-      console.log("📦 Uploaded files:", req.files);
-      console.log("📄 Body data:", req.body.data);
+      // console.log("📦 Uploaded files:", req.files);
+      // console.log("📄 Body data:", req.body.data);
 
       const filesObj = req.files as { [key: string]: Express.Multer.File[] } | undefined;
 
@@ -197,11 +197,11 @@ const createCustomPayment = catchAsync(
       for (const key in filesObj) {
         totalFiles += filesObj[key].length;
       }
-      console.log("Total files uploaded:", totalFiles);
+      // console.log("Total files uploaded:", totalFiles);
 
       // parse body data
       const parsedData = JSON.parse(req.body.data || "{}");
-      console.log("✅ Parsed data:", parsedData);
+      // console.log("✅ Parsed data:", parsedData);
 
       // Validate screenIds
       if (!parsedData.screenIds || !Array.isArray(parsedData.screenIds)) {
@@ -247,7 +247,7 @@ const createCustomPayment = catchAsync(
         content: contentData, // [{ screenId, url }, ...]
       };
 
-      console.log("🚀 Final Payload:", payload);
+      // console.log("🚀 Final Payload:", payload);
 
       const result = await paymentService.checkoutCustom(payload);
 

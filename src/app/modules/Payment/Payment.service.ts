@@ -294,7 +294,7 @@ const getAllBundlePayments = async (query: any) => {
 };
 
 const checkoutBundle = async (data: any) => {
-  console.log("🚀 ~ checkoutBundle ~ data:", data);
+  // console.log("🚀 ~ checkoutBundle ~ data:", data);
 
   return await prisma.$transaction(async (tx) => {
     // 1️⃣ Validate customer
