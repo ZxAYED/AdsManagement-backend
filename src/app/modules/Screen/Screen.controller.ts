@@ -199,6 +199,16 @@ const topSalesScreens = catchAsync(async (req: Request , res: Response) => {
     data: result,
   });
 })
+const getNewArrivalsScreens = catchAsync(async (req: Request , res: Response) => {
+
+  const result = await ScreenService.getNewArrivalsScreens();
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Screen list fetched successfully",
+    data: result,
+  });
+})
 
 
 export const ScreenController = {
@@ -211,5 +221,6 @@ export const ScreenController = {
   getMySelfFavouriteScreen,
   changeAvaillabilityStatusToMaintannence,
   changeAvaillabilityStatusToAvailable,
-  topSalesScreens
+  topSalesScreens,
+  getNewArrivalsScreens
 };
