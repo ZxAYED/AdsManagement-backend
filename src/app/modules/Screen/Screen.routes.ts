@@ -10,6 +10,13 @@ router.get(
   RoleValidation(USER_ROLE.customer),
   ScreenController.getMySelfFavouriteScreen
 );
+router.get(
+  "/top-sales-screen",
+  RoleValidation(USER_ROLE.customer, USER_ROLE.admin),
+  ScreenController.topSalesScreens
+);
+
+
 
 router.get("/", ScreenController.getAll);
 router.get("/:slug", ScreenController.getById);

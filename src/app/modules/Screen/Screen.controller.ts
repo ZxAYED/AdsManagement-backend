@@ -189,6 +189,16 @@ const changeAvaillabilityStatusToAvailable = catchAsync(async (req: Request , re
     data: result,
   });
 })
+const topSalesScreens = catchAsync(async (req: Request , res: Response) => {
+
+  const result = await ScreenService.topSalesScreens();
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "Screen list fetched successfully",
+    data: result,
+  });
+})
 
 
 export const ScreenController = {
@@ -200,5 +210,6 @@ export const ScreenController = {
   addFavouriteScreen,
   getMySelfFavouriteScreen,
   changeAvaillabilityStatusToMaintannence,
-  changeAvaillabilityStatusToAvailable
+  changeAvaillabilityStatusToAvailable,
+  topSalesScreens
 };
