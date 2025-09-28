@@ -5,7 +5,7 @@ import { Secret } from "jsonwebtoken";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
-import { ORGANISATION_ROLE, User, USER_ROLE } from "@prisma/client";
+import { User, USER_ROLE } from "@prisma/client";
 import { sendOtpEmail } from "../../../utils/sendOtpEmail";
 import { sendPasswordResetOtp } from "../../../utils/sendResetPasswordOtp";
 
@@ -34,10 +34,9 @@ const createUser = async (payload: User) => {
     otp_expires_at: otpExpiresAt,
     is_verified: false,
     role: USER_ROLE.customer,
-    // organisation_role: ORGANISATION_ROLE.advertiser,
   };
 
-  console.log("📨 OTP generated:", otp);
+  // console.log("📨 OTP generated:", otp);
 
   const result = await prisma.user.create({
     data: userData,
