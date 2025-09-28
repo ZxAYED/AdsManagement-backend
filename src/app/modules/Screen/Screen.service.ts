@@ -180,6 +180,26 @@ const changeAvaillabilityStatusToAvailable = async (screenId: string) => {
   });
 };
 
+const topSalesScreens = async () => {
+  const campaigns = await prisma.screen.findMany({
+    where: {
+      availability: SCREEN_AVAILABILITY.available,
+    },
+    include: {
+      CustomPayments: {
+        where: {
+          status: "success",
+        },
+      },
+    },
+  });
+
+  const filtered = campaigns.filter(screen => screen.CustomPayments.length >= 10);
+
+  return filtered;
+};
+
+
 export const ScreenService = {
   getAllScreenFromDB,
   getSingleScreenFromDB,
@@ -190,4 +210,5 @@ export const ScreenService = {
   getMySelfFavouriteScreen,
   changeAvaillabilityStatusToMaintannence,
   changeAvaillabilityStatusToAvailable,
+  topSalesScreens
 };
