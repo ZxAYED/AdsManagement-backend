@@ -120,7 +120,6 @@ const myselfCustomPayments = async (userId: string, query: any) => {
   return { data: paymentsWithContents, meta };
 };
 
-
 const getSingleCustomPaymentFromDB = async (id: string) => {
   // 1️⃣ Fetch the payment with basic relations
   const payment = await prisma.customPayment.findFirst({
@@ -151,9 +150,6 @@ const getSingleCustomPaymentFromDB = async (id: string) => {
   // 3️⃣ Attach contents to the payment object
   return { ...payment, contents };
 };
-
-
-
 
 const getSingleBundlePaymentFromDB = async (id: string) => {
   // 1️⃣ Fetch the payment with basic relations
@@ -189,7 +185,6 @@ const getSingleBundlePaymentFromDB = async (id: string) => {
   // 3️⃣ Attach contents to the payment object
   return { ...payment, contents };
 };
-
 
 const getAllCustomPayments = async (query: any) => {
   const { page, limit, skip, sortBy, sortOrder } =
@@ -239,7 +234,6 @@ const getAllCustomPayments = async (query: any) => {
 
   return { data: campaignsWithContents, meta };
 };
-
 
 const getAllBundlePayments = async (query: any) => {
   // 1️⃣ Pagination values
@@ -394,10 +388,7 @@ const checkoutBundle = async (data: any) => {
   });
 };
 
-
-
 const checkoutCustom = async (data: any) => {
-  console.log("🚀 ~ checkoutCustom ~ data:", data);
 
   return await prisma.$transaction(async (tx) => {
     // 1️⃣ Validate customer
@@ -406,12 +397,26 @@ const checkoutCustom = async (data: any) => {
     });
     if (!user) throw new AppError(status.NOT_FOUND, "User not found");
 
-    // 2️⃣ Validate selected screens
     const screens = await tx.screen.findMany({
       where: { id: { in: data.screenIds } },
     });
-    if (!screens.length)
+
+    if (!screens.length) {
       throw new AppError(status.BAD_REQUEST, "No valid screens selected");
+    }
+
+    // ✅ Find missing IDs
+    const foundIds = screens.map((s) => s.id);
+    const missingIds = data.screenIds.filter(
+      (id: string) => !foundIds.includes(id)
+    );
+
+    if (missingIds.length > 0) {
+      throw new AppError(
+        status.NOT_FOUND,
+        `Screens not found for IDs: ${missingIds.join(", ")}`
+      );
+    }
 
     // 3️⃣ Calculate total amount based on duration
     const startDate = new Date(data.startDate);
