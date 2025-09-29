@@ -194,9 +194,27 @@ const topSalesScreens = async () => {
     },
   });
 
-  const filtered = campaigns.filter(screen => screen.CustomPayments.length >= 10);
+  const filtered = campaigns.filter(
+    (screen) => screen.CustomPayments.length >= 1
+  );
 
   return filtered;
+};
+
+const getNewArrivalsScreens = async () => {
+  const newArrivals = await prisma.screen.findMany({
+    where: {
+      isDeleted: false,
+      availability: SCREEN_AVAILABILITY.available,
+    },
+   
+    orderBy: {
+      createdAt: "desc", // Assuming this field exists
+    },
+    take: 10,
+  });
+
+  return newArrivals;
 };
 
 
@@ -210,5 +228,6 @@ export const ScreenService = {
   getMySelfFavouriteScreen,
   changeAvaillabilityStatusToMaintannence,
   changeAvaillabilityStatusToAvailable,
-  topSalesScreens
+  topSalesScreens,
+  getNewArrivalsScreens
 };

@@ -88,9 +88,9 @@ CREATE TABLE "public"."CustomCampaign" (
     "paymentId" TEXT,
     "status" "public"."CAMPAIGN_STATUS" NOT NULL,
     "type" "public"."CAMPAIGN_TYPE" NOT NULL DEFAULT 'custom',
-    "contentUrl" TEXT NOT NULL,
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3) NOT NULL,
+    "contentIds" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -107,8 +107,20 @@ CREATE TABLE "public"."CustomPayment" (
     "transactionId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "contentIds" TEXT[],
 
     CONSTRAINT "CustomPayment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."CustomContent" (
+    "id" TEXT NOT NULL,
+    "screenId" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "CustomContent_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -138,20 +150,6 @@ CREATE TABLE "public"."Banner" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."BundlePayment" (
-    "id" TEXT NOT NULL,
-    "customerId" TEXT NOT NULL,
-    "bundleId" TEXT NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL,
-    "status" "public"."PAYMENT_STATUS" NOT NULL DEFAULT 'pending',
-    "transactionId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "BundlePayment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "public"."Message" (
     "id" TEXT NOT NULL,
     "senderId" TEXT NOT NULL,
@@ -176,6 +174,21 @@ CREATE TABLE "public"."Notification" (
 );
 
 -- CreateTable
+CREATE TABLE "public"."BundlePayment" (
+    "id" TEXT NOT NULL,
+    "customerId" TEXT NOT NULL,
+    "bundleId" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "status" "public"."PAYMENT_STATUS" NOT NULL DEFAULT 'pending',
+    "transactionId" TEXT,
+    "contentIds" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BundlePayment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."BundleCampaign" (
     "id" TEXT NOT NULL,
     "bundleId" TEXT NOT NULL,
@@ -183,13 +196,25 @@ CREATE TABLE "public"."BundleCampaign" (
     "paymentId" TEXT,
     "status" "public"."CAMPAIGN_STATUS" NOT NULL,
     "type" "public"."CAMPAIGN_TYPE" NOT NULL,
-    "contentUrl" TEXT NOT NULL,
+    "contentIds" TEXT[],
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "BundleCampaign_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."BundleContent" (
+    "id" TEXT NOT NULL,
+    "bundleId" TEXT NOT NULL,
+    "screenId" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BundleContent_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -250,13 +275,10 @@ ALTER TABLE "public"."CustomPayment" ADD CONSTRAINT "CustomPayment_customerId_fk
 ALTER TABLE "public"."CustomPayment" ADD CONSTRAINT "CustomPayment_campaignId_fkey" FOREIGN KEY ("campaignId") REFERENCES "public"."CustomCampaign"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "public"."CustomContent" ADD CONSTRAINT "CustomContent_screenId_fkey" FOREIGN KEY ("screenId") REFERENCES "public"."Screen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "public"."Banner" ADD CONSTRAINT "Banner_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."BundlePayment" ADD CONSTRAINT "BundlePayment_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."BundlePayment" ADD CONSTRAINT "BundlePayment_bundleId_fkey" FOREIGN KEY ("bundleId") REFERENCES "public"."Bundle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Message" ADD CONSTRAINT "Message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -268,6 +290,12 @@ ALTER TABLE "public"."Message" ADD CONSTRAINT "Message_receiverId_fkey" FOREIGN 
 ALTER TABLE "public"."Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "public"."BundlePayment" ADD CONSTRAINT "BundlePayment_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."BundlePayment" ADD CONSTRAINT "BundlePayment_bundleId_fkey" FOREIGN KEY ("bundleId") REFERENCES "public"."Bundle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "public"."BundleCampaign" ADD CONSTRAINT "BundleCampaign_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -275,6 +303,12 @@ ALTER TABLE "public"."BundleCampaign" ADD CONSTRAINT "BundleCampaign_paymentId_f
 
 -- AddForeignKey
 ALTER TABLE "public"."BundleCampaign" ADD CONSTRAINT "BundleCampaign_bundleId_fkey" FOREIGN KEY ("bundleId") REFERENCES "public"."Bundle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."BundleContent" ADD CONSTRAINT "BundleContent_bundleId_fkey" FOREIGN KEY ("bundleId") REFERENCES "public"."Bundle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."BundleContent" ADD CONSTRAINT "BundleContent_screenId_fkey" FOREIGN KEY ("screenId") REFERENCES "public"."Screen"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."_CampaignScreens" ADD CONSTRAINT "_CampaignScreens_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."CustomCampaign"("id") ON DELETE CASCADE ON UPDATE CASCADE;

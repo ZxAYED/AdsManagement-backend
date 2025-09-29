@@ -12,17 +12,17 @@ const port = 5000;
 
 async function ensureAdmin() {
   const existingAdmin = await prisma.user.findFirst({
-    where: { email: "admin@scne_ads.com" },
+    where: { email: "admin@scneads.com" },
   });
 
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash("Admin@123", 12); // default password
+    const hashedPassword = await bcrypt.hash("123456", 12); // default password
     await prisma.user.create({
       data: {
         first_name: "Mr.",
         last_name: "Admin",
         phone: "+8801712345678",
-        email: "admin@scne_ads.com",
+        email: "admin@scneads.com",
         password: hashedPassword,
         organisation_name: "SCNE Ads",
         role: USER_ROLE.admin,
@@ -32,7 +32,7 @@ async function ensureAdmin() {
       },
     });
     console.log(
-      "✅ Default Admin created (email: admin@scne_ads.com, password: Admin@123)"
+      "✅ Default Admin created (email: admin@scneads.com, password: 123456)"
     );
   } else {
     console.log("ℹ️ Admin already exists, skipping creation.");

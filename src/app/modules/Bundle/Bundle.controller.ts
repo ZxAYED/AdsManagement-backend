@@ -57,7 +57,11 @@ const create = catchAsync(
     try {
       payload = JSON.parse(req.body.data);
     } catch (error) {
-      fs.unlinkSync(req.file.path);
+      fs.unlink(req.file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
       return res.status(400).json({
         success: false,
         message: "Invalid JSON in 'data' field",
@@ -66,13 +70,20 @@ const create = catchAsync(
 
     try {
       const ImageName = `Image-${Date.now()}-${nanoid(6)}`;
-        const imageLink = await uploadImageToSupabase(req.file, ImageName);
+      const imageLink = await uploadImageToSupabase(req.file, ImageName);
       payload.img_url = imageLink;
-      fs.unlinkSync(req.file.path);
-
+      fs.unlink(req.file.path, (err) => {
+        if (err) {
+          console.error("❌ Error deleting local file:", err);
+        }
+      });
       payload.slug = `${payload.bundle_name.toLowerCase().replace(/ /g, "-")}`;
     } catch (error) {
-      fs.unlinkSync(req.file.path);
+      fs.unlink(req.file.path, (err) => {
+        if (err) {
+          console.error("❌ Error deleting local file:", err);
+        }
+      });
       return res.status(500).json({
         success: false,
         message: "Error processing image or payload",
@@ -99,7 +110,11 @@ const update = catchAsync(
       try {
         payload = JSON.parse(req.body.data);
       } catch (error) {
-        if (req.file) fs.unlinkSync(req.file.path);
+        if (req.file)  fs.unlink(req.file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
         return res.status(400).json({
           success: false,
           message: "Invalid JSON in 'data' field",
@@ -113,9 +128,17 @@ const update = catchAsync(
         const ImageName = `Image-${Date.now()}-${nanoid(6)}`;
         const imageLink = await uploadImageToSupabase(req.file, ImageName);
         payload.img_url = imageLink;
-        fs.unlinkSync(req.file.path);
+      fs.unlink(req.file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
       } catch (error) {
-        if (req.file) fs.unlinkSync(req.file.path);
+        if (req.file)  fs.unlink(req.file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });;
         return res.status(500).json({
           success: false,
           message: "Error uploading image",
@@ -124,13 +147,15 @@ const update = catchAsync(
     }
 
     // Always update slug if bundle_name is provided
-   
-    // Set adminId from logged-in user
 
+    // Set adminId from logged-in user
 
     // Call service function (update logic inside service)
     try {
-      const result = await BundleService.updateBundleIntoDB({...payload, slug: req.params.slug}); // separate update function recommended
+      const result = await BundleService.updateBundleIntoDB({
+        ...payload,
+        slug: req.params.slug,
+      }); // separate update function recommended
       sendResponse(res, {
         statusCode: status.OK,
         success: true,
@@ -146,7 +171,6 @@ const update = catchAsync(
   }
 );
 
-
 const remove = catchAsync(async (req: Request, res: Response) => {
   await BundleService.deleteBundleFromDB(req.params.slug);
   sendResponse(res, {
@@ -157,19 +181,18 @@ const remove = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
-const getAvailableBundlesFromDB = catchAsync(async (req: Request, res: Response) => {
-  // console.log("Fetching available bundles from DB with query:", req.query);
-  const result = await BundleService.getAvailableBundlesFromDB(req.query);
-  sendResponse(res, { 
-    statusCode: status.OK,
-    success: true,
-    message: "Available bundles fetched successfully",
-    data: result
-  });
-});
-
-
+const getAvailableBundlesFromDB = catchAsync(
+  async (req: Request, res: Response) => {
+    // console.log("Fetching available bundles from DB with query:", req.query);
+    const result = await BundleService.getAvailableBundlesFromDB(req.query);
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Available bundles fetched successfully",
+      data: result,
+    });
+  }
+);
 
 export const BundleController = {
   getAll,
@@ -178,5 +201,5 @@ export const BundleController = {
   update,
   remove,
   getAvailableBundlesFromDB,
-  getSingleById
+  getSingleById,
 };
