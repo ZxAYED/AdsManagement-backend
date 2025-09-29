@@ -207,20 +207,16 @@ const getNewArrivalsScreens = async () => {
       isDeleted: false,
       availability: SCREEN_AVAILABILITY.available,
     },
-    include: {
-      CustomPayments: {
-        where: {
-          status: "success",
-        },
-      },
-    },
+   
     orderBy: {
       createdAt: "desc", // Assuming this field exists
     },
+    take: 10,
   });
 
   return newArrivals;
 };
+
 
 export const ScreenService = {
   getAllScreenFromDB,

@@ -46,7 +46,11 @@ const create = catchAsync(
         img_url = imageLink;
 
         // Delete the local file after upload
-        fs.unlinkSync(req.file.path as any);
+         fs.unlink(req.file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
       } catch (err) {
         console.error("❌ Upload error:", err);
         res.status(500).json({ success: false, message: "fetch failed" });

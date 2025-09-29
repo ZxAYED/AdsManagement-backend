@@ -146,7 +146,7 @@ const create = catchAsync(
         contentData.push({ screenId, url: uploadedUrl });
 
         // remove local file
-        fs.unlink(file.path, (err) => {
+         fs.unlink(file.path, (err) => {
           if (err) {
             console.error("❌ Error deleting local file:", err);
           }

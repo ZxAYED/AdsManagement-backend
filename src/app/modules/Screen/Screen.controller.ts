@@ -53,7 +53,11 @@ const create = catchAsync(
         const imageLink = await uploadImageToSupabase(req.file, ImageName);
         img_url = imageLink;
 
-        fs.unlinkSync(req.file.path);
+        fs.unlink(req.file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
       } catch (err) {
         console.error("❌ Upload error:", err);
         return res
@@ -99,11 +103,15 @@ const update = catchAsync(async (req: Request, res: Response) => {
   if (req.file) {
     try {
       const ImageName = `Image-${Date.now()}`;
-        const imageLink = await uploadImageToSupabase(req.file, ImageName);
+      const imageLink = await uploadImageToSupabase(req.file, ImageName);
 
       img_url = imageLink;
 
-      fs.unlinkSync(req.file.path);
+      fs.unlink(req.file.path, (err) => {
+        if (err) {
+          console.error("❌ Error deleting local file:", err);
+        }
+      });
     } catch (err) {
       console.error("❌ Upload error:", err);
       return res
@@ -117,7 +125,7 @@ const update = catchAsync(async (req: Request, res: Response) => {
     ...payload,
     ...(img_url && { img_url }),
     slug:
-        payload.screen_name.toLowerCase().replace(/ /g, "-") + "-" + nanoid(6),
+      payload.screen_name.toLowerCase().replace(/ /g, "-") + "-" + nanoid(6),
   });
 
   sendResponse(res, {
@@ -138,59 +146,67 @@ const remove = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const addFavouriteScreen = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    const payload = {
+      screenId: req.body.screenId as string,
+      userId: req.user.id as string,
+    };
 
-const addFavouriteScreen= catchAsync(async (req: Request & { user?: any }, res: Response) => {
+    // console.log({payload})
 
-  const payload ={
-    screenId: req.body.screenId as string,
-    userId: req.user.id as string
+    const result = await ScreenService.addFavouriteScreen(payload);
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Screen added to favourites successfully",
+      data: result,
+    });
   }
+);
 
-  // console.log({payload})
+const getMySelfFavouriteScreen = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    const result = await ScreenService.getMySelfFavouriteScreen(
+      req.user.id as string
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Screen list fetched successfully",
+      data: result,
+    });
+  }
+);
 
-  const result = await ScreenService.addFavouriteScreen(payload);
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Screen added to favourites successfully",
-    data: result,
-  });
-});
-
-
-const getMySelfFavouriteScreen= catchAsync(async (req: Request & { user?: any }, res: Response) => {
-  const result = await ScreenService.getMySelfFavouriteScreen(req.user.id as string);
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Screen list fetched successfully",
-    data: result,
-  });
-});
-
-
-const changeAvaillabilityStatusToMaintannence = catchAsync(async (req: Request , res: Response) => {
-
-  const result = await ScreenService.changeAvaillabilityStatusToMaintannence(req.params.id as string);
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Screen availlability status changed at maintannence successfully",
-    data: result,
-  });
-})
-const changeAvaillabilityStatusToAvailable = catchAsync(async (req: Request , res: Response) => {
-
-  const result = await ScreenService.changeAvaillabilityStatusToAvailable(req.params.id as string);
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Screen availlability status changed at available successfully",
-    data: result,
-  });
-})
-const topSalesScreens = catchAsync(async (req: Request , res: Response) => {
-
+const changeAvaillabilityStatusToMaintannence = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await ScreenService.changeAvaillabilityStatusToMaintannence(
+      req.params.id as string
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message:
+        "Screen availlability status changed at maintannence successfully",
+      data: result,
+    });
+  }
+);
+const changeAvaillabilityStatusToAvailable = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await ScreenService.changeAvaillabilityStatusToAvailable(
+      req.params.id as string
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Screen availlability status changed at available successfully",
+      data: result,
+    });
+  }
+);
+const topSalesScreens = catchAsync(async (req: Request, res: Response) => {
   const result = await ScreenService.topSalesScreens();
   sendResponse(res, {
     statusCode: status.OK,
@@ -198,18 +214,18 @@ const topSalesScreens = catchAsync(async (req: Request , res: Response) => {
     message: "Screen list fetched successfully",
     data: result,
   });
-})
-const getNewArrivalsScreens = catchAsync(async (req: Request , res: Response) => {
-
-  const result = await ScreenService.getNewArrivalsScreens();
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Screen list fetched successfully",
-    data: result,
-  });
-})
-
+});
+const getNewArrivalsScreens = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await ScreenService.getNewArrivalsScreens();
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Fetched from the latest 10 screens successfully.",
+      data: result,
+    });
+  }
+);
 
 export const ScreenController = {
   getAll,
@@ -222,5 +238,5 @@ export const ScreenController = {
   changeAvaillabilityStatusToMaintannence,
   changeAvaillabilityStatusToAvailable,
   topSalesScreens,
-  getNewArrivalsScreens
+  getNewArrivalsScreens,
 };
