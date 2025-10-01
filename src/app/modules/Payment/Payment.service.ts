@@ -1,4 +1,4 @@
-import { BUNDLE_STATUS, CAMPAIGN_STATUS, CAMPAIGN_TYPE } from "@prisma/client";
+import { BUNDLE_STATUS, CAMPAIGN_STATUS, CAMPAIGN_TYPE, PAYMENT_STATUS } from "@prisma/client";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
@@ -21,7 +21,7 @@ const myselfPayments = async (userId: string, query: any) => {
   whereConditions = {
     ...whereConditions,
     customerId: userId,
-    status: { not: "pending" },
+    status: PAYMENT_STATUS.success,
   };
 
   const total = await prisma.bundlePayment.count({ where: whereConditions });
@@ -73,7 +73,7 @@ const myselfCustomPayments = async (userId: string, query: any) => {
   whereConditions = {
     ...whereConditions,
     customerId: userId,
-    status: { not: "pending" },
+    status: PAYMENT_STATUS.success,
   };
 
   // 4️⃣ Total count
