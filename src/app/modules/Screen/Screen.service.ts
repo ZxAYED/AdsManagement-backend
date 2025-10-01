@@ -194,9 +194,9 @@ const topSalesScreens = async () => {
     },
   });
 
-  const filtered = campaigns.filter(
-    (screen) => screen.CustomPayments.length >= 1
-  );
+  const filtered = campaigns
+    .filter((screen) => screen.CustomPayments.length >= 1)
+    .map(({ CustomPayments, ...rest }) => rest); // remove CustomPayments
 
   return filtered;
 };
