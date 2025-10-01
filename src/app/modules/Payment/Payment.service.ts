@@ -186,45 +186,54 @@ const getSingleBundlePaymentFromDB = async (id: string) => {
   return { ...payment, contents };
 };
 
-const getAllCustomPayments = async (query: any) => {
+const getAllCustomPayments = async ( query: any) => {
+  // 1️⃣ Pagination values
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
 
+  // 2️⃣ Build dynamic filters from query
   let whereConditions = buildDynamicFilters(query, paymentSearchableFields);
 
+  // 3️⃣ Filter by userId and non-pending payments
   whereConditions = {
     ...whereConditions,
-    status: { not: "pending" },
+    status: PAYMENT_STATUS.success,
   };
 
+  // 4️⃣ Total count
   const total = await prisma.customPayment.count({ where: whereConditions });
 
-  const campaigns = await prisma.customCampaign.findMany({
-    where: {},
+  // 5️⃣ Fetch payments with basic relations
+  const payments = await prisma.customPayment.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
     orderBy: sortBy
       ? { [sortBy]: sortOrder === "asc" ? "asc" : "desc" }
       : { createdAt: "desc" },
-    take: limit,
-    skip,
     include: {
-      customer: {
+      user: {
         select: { id: true, first_name: true, last_name: true, email: true },
       },
       screens: true,
-      CustomPayment: true,
     },
   });
 
-  const campaignsWithContents = await Promise.all(
-    campaigns.map(async (campaign) => {
+  // 6️⃣ Fetch content for each payment
+  const paymentsWithContents = await Promise.all(
+    payments.map(async (payment) => {
       const contents = await prisma.customContent.findMany({
-        where: { id: { in: campaign.contentIds } },
+        where: { id: { in: payment.contentIds } },
         include: { screen: true },
       });
-      return { ...campaign, contents };
+      return {
+        ...payment,
+        contents, // attach full content objects
+      };
     })
   );
 
+  // 7️⃣ Meta info
   const meta = {
     page,
     limit,
@@ -232,8 +241,9 @@ const getAllCustomPayments = async (query: any) => {
     totalPages: Math.ceil(total / limit),
   };
 
-  return { data: campaignsWithContents, meta };
+  return { data: paymentsWithContents, meta };
 };
+
 
 const getAllBundlePayments = async (query: any) => {
   // 1️⃣ Pagination values
@@ -246,7 +256,7 @@ const getAllBundlePayments = async (query: any) => {
   // 3️⃣ Filter by userId
   whereConditions = {
     ...whereConditions,
-    status: { not: "pending" },
+    status: PAYMENT_STATUS.success,
   };
   // 4️⃣ Total count
   const total = await prisma.bundlePayment.count({ where: whereConditions });
