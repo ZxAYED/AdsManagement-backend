@@ -1,4 +1,9 @@
-import { BUNDLE_STATUS, CAMPAIGN_STATUS, CAMPAIGN_TYPE, PAYMENT_STATUS } from "@prisma/client";
+import {
+  BUNDLE_STATUS,
+  CAMPAIGN_STATUS,
+  CAMPAIGN_TYPE,
+  PAYMENT_STATUS,
+} from "@prisma/client";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
@@ -186,7 +191,7 @@ const getSingleBundlePaymentFromDB = async (id: string) => {
   return { ...payment, contents };
 };
 
-const getAllCustomPayments = async ( query: any) => {
+const getAllCustomPayments = async (query: any) => {
   // 1️⃣ Pagination values
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(query);
@@ -243,7 +248,6 @@ const getAllCustomPayments = async ( query: any) => {
 
   return { data: paymentsWithContents, meta };
 };
-
 
 const getAllBundlePayments = async (query: any) => {
   // 1️⃣ Pagination values
@@ -399,7 +403,6 @@ const checkoutBundle = async (data: any) => {
 };
 
 const checkoutCustom = async (data: any) => {
-
   return await prisma.$transaction(async (tx) => {
     // 1️⃣ Validate customer
     const user = await tx.user.findUnique({
