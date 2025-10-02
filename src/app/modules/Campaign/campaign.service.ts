@@ -22,12 +22,27 @@ const getAllBundleCampaignFromDB = async (query: any, dateFilter?: string) => {
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-  if (dateFilter) {
+  // if (dateFilter) {
+  //   const { start } = getDateRange(dateFilter);
+  //   if (start) {
+  //     whereConditions.startDate = {
+  //       ...(whereConditions.startDate || {}),
+  //       gte: start,
+  //     };
+  //   }
+  // }
+
+    if (dateFilter) {
     const { start } = getDateRange(dateFilter);
+    // console.log({ start });
+
     if (start) {
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+
       whereConditions.startDate = {
-        ...(whereConditions.startDate || {}),
         gte: start,
+        lte: end,
       };
     }
   }
@@ -199,7 +214,7 @@ const getSingleBundleCampaignFromDB = async (id: string) => {
   const contents = await prisma.bundleContent.findMany({
     where: { id: { in: isCampaignExists.contentIds } },
     include: {
-      screen: true, 
+      screen: true,
     },
   });
 
@@ -221,14 +236,30 @@ const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-  if (dateFilter) {
+  // if (dateFilter) {
+  //   const { start } = getDateRange(dateFilter);
+  //   console.log({ start });
+
+  //   if (start) {
+  //     whereConditions.startDate = {
+  //       ...(whereConditions.startDate || {}),
+  //       gte: start,
+  //     };
+  //   }
+  // }
+
+
+    if (dateFilter) {
     const { start } = getDateRange(dateFilter);
-    console.log({ start });
+    // console.log({ start });
 
     if (start) {
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+
       whereConditions.startDate = {
-        ...(whereConditions.startDate || {}),
         gte: start,
+        lte: end,
       };
     }
   }
@@ -433,14 +464,29 @@ const myselfAllBundleCampaignFromDB = async (
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-  if (dateFilter) {
+  // if (dateFilter) {
+  //   const { start } = getDateRange(dateFilter);
+  //   console.log({ start });
+
+  //   if (start) {
+  //     whereConditions.startDate = {
+  //       ...(whereConditions.startDate || {}),
+  //       gte: start,
+  //     };
+  //   }
+  // }
+
+    if (dateFilter) {
     const { start } = getDateRange(dateFilter);
-    console.log({ start });
+    // console.log({ start });
 
     if (start) {
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+
       whereConditions.startDate = {
-        ...(whereConditions.startDate || {}),
         gte: start,
+        lte: end,
       };
     }
   }
@@ -619,9 +665,12 @@ const myselfAllCustomCampaignFromDB = async (
     // console.log({ start });
 
     if (start) {
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+
       whereConditions.startDate = {
-        ...(whereConditions.startDate || {}),
         gte: start,
+        lte: end,
       };
     }
   }
