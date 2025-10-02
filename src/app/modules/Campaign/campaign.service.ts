@@ -22,27 +22,19 @@ const getAllBundleCampaignFromDB = async (query: any, dateFilter?: string) => {
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-  // if (dateFilter) {
-  //   const { start } = getDateRange(dateFilter);
-  //   if (start) {
-  //     whereConditions.startDate = {
-  //       ...(whereConditions.startDate || {}),
-  //       gte: start,
-  //     };
-  //   }
-  // }
+
 
     if (dateFilter) {
     const { start } = getDateRange(dateFilter);
     // console.log({ start });
 
     if (start) {
-      const end = new Date(start);
-      end.setHours(23, 59, 59, 999);
+      // const end = new Date(start);
+      // end.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
         gte: start,
-        lte: end,
+        // lte: end,
       };
     }
   }
@@ -236,17 +228,7 @@ const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-  // if (dateFilter) {
-  //   const { start } = getDateRange(dateFilter);
-  //   console.log({ start });
 
-  //   if (start) {
-  //     whereConditions.startDate = {
-  //       ...(whereConditions.startDate || {}),
-  //       gte: start,
-  //     };
-  //   }
-  // }
 
 
     if (dateFilter) {
@@ -254,12 +236,12 @@ const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
     // console.log({ start });
 
     if (start) {
-      const end = new Date(start);
-      end.setHours(23, 59, 59, 999);
+      // const end = new Date(start);
+      // end.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
         gte: start,
-        lte: end,
+        // lte: end,
       };
     }
   }
@@ -464,29 +446,18 @@ const myselfAllBundleCampaignFromDB = async (
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-  // if (dateFilter) {
-  //   const { start } = getDateRange(dateFilter);
-  //   console.log({ start });
-
-  //   if (start) {
-  //     whereConditions.startDate = {
-  //       ...(whereConditions.startDate || {}),
-  //       gte: start,
-  //     };
-  //   }
-  // }
 
     if (dateFilter) {
     const { start } = getDateRange(dateFilter);
     // console.log({ start });
 
     if (start) {
-      const end = new Date(start);
-      end.setHours(23, 59, 59, 999);
+      // const end = new Date(start);
+      // end.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
         gte: start,
-        lte: end,
+        // lte: end,
       };
     }
   }
@@ -666,11 +637,11 @@ const myselfAllCustomCampaignFromDB = async (
 
     if (start) {
       const end = new Date(start);
-      end.setHours(23, 59, 59, 999);
+      // end.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
         gte: start,
-        lte: end,
+        // lte: end,
       };
     }
   }
