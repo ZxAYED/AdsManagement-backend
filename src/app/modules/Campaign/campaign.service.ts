@@ -22,24 +22,22 @@ const getAllBundleCampaignFromDB = async (query: any, dateFilter?: string) => {
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-
-
-    if (dateFilter) {
+if (dateFilter) {
     const { start } = getDateRange(dateFilter);
-    // console.log({ start });
 
     if (start) {
-      // const end = new Date(start);
-      // end.setHours(23, 59, 59, 999);
+      const startOfDay = new Date(start);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
-        gte: start,
-        // lte: end,
+        gte: startOfDay, 
+        lte: endOfDay, 
       };
     }
   }
-
-  // 2️⃣ Count campaigns by status
   const [totalCampaign, totalPending, totalRunning, totalCompleted] =
     await Promise.all([
       prisma.bundleCampaign.count({
@@ -228,25 +226,22 @@ const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-
-
-
-    if (dateFilter) {
+ if (dateFilter) {
     const { start } = getDateRange(dateFilter);
-    // console.log({ start });
 
     if (start) {
-      // const end = new Date(start);
-      // end.setHours(23, 59, 59, 999);
+      const startOfDay = new Date(start);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
-        gte: start,
-        // lte: end,
+        gte: startOfDay, 
+        lte: endOfDay, 
       };
     }
   }
-
-  // 1️⃣ Count campaigns by status
   const [totalCampaign, totalPending, totalRunning, totalCompleted] =
     await Promise.all([
       prisma.customCampaign.count({
@@ -446,18 +441,19 @@ const myselfAllBundleCampaignFromDB = async (
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-
-    if (dateFilter) {
+if (dateFilter) {
     const { start } = getDateRange(dateFilter);
-    // console.log({ start });
 
     if (start) {
-      // const end = new Date(start);
-      // end.setHours(23, 59, 59, 999);
+      const startOfDay = new Date(start);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
-        gte: start,
-        // lte: end,
+        gte: startOfDay, 
+        lte: endOfDay, 
       };
     }
   }
@@ -631,22 +627,27 @@ const myselfAllCustomCampaignFromDB = async (
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
+
+
+  // 1️⃣ Count campaigns by status
+
   if (dateFilter) {
     const { start } = getDateRange(dateFilter);
-    // console.log({ start });
 
     if (start) {
-      const end = new Date(start);
-      // end.setHours(23, 59, 59, 999);
+      const startOfDay = new Date(start);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
-        gte: start,
-        // lte: end,
+        gte: startOfDay, 
+        lte: endOfDay, 
       };
     }
   }
 
-  // 1️⃣ Count campaigns by status
   const [totalCampaign, totalPending, totalRunning, totalCompleted] =
     await Promise.all([
       prisma.customCampaign.count({
