@@ -293,18 +293,17 @@ const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
 
   const campaignsWithContents = await Promise.all(
     campaigns.map(async (campaign) => {
-      const allContentIds = campaign.CustomPayment.flatMap((p) => p.contentIds);
+      // const allContentIds = campaign.CustomPayment.flatMap((p) => p.contentIds);
 
-      const uniqueContentIds = Array.from(new Set(allContentIds));
+      // const uniqueContentIds = Array.from(new Set(allContentIds));
 
-      const contents = await prisma.customContent.findMany({
-        where: { id: { in: uniqueContentIds } },
-        include: { screen: true },
-      });
+      // const contents = await prisma.customContent.findMany({
+      //   where: { id: { in: uniqueContentIds } },
+      //   include: { screen: true },
+      // });
 
       return {
         ...campaign,
-        contents,
       };
     })
   );
@@ -407,14 +406,14 @@ const getSingleCustomCampaignFromDB = async (id: string) => {
     throw new AppError(status.NOT_FOUND, "Campaign not found");
   }
 
-  const contents = await prisma.customContent.findMany({
-    where: { id: { in: isCampaignExists.contentIds } },
-    include: {
-      screen: true,
-    },
-  });
+  // const contents = await prisma.customContent.findMany({
+  //   where: { id: { in: isCampaignExists.contentIds } },
+  //   include: {
+  //     screen: true,
+  //   },
+  // });
 
-  return { ...isCampaignExists, contents };
+  return { ...isCampaignExists };
 };
 
 const myselfAllBundleCampaignFromDB = async (
@@ -712,19 +711,17 @@ const myselfAllCustomCampaignFromDB = async (
 
   const campaignsWithContents = await Promise.all(
     campaigns.map(async (campaign) => {
-      const allContentIds = campaign.CustomPayment.flatMap((p) => p.contentIds);
+      // const allContentIds = campaign.CustomPayment.flatMap((p) => p.contentIds);
 
-      const uniqueContentIds = Array.from(new Set(allContentIds));
+      // const uniqueContentIds = Array.from(new Set(allContentIds));
 
-      const contents = await prisma.customContent.findMany({
-        where: { id: { in: uniqueContentIds } },
-        include: { screen: true }, // screen info attach করতে চাইলে
-      });
+      // const contents = await prisma.customContent.findMany({
+      //   where: { id: { in: uniqueContentIds } },
+      //   include: { screen: true }, // screen info attach করতে চাইলে
+      // });
 
       return {
-        ...campaign,
-        contents,
-      };
+        ...campaign      };
     })
   );
 

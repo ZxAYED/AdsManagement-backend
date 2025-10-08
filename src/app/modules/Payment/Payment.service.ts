@@ -103,14 +103,12 @@ const myselfCustomPayments = async (userId: string, query: any) => {
   // 6️⃣ Fetch content for each payment
   const paymentsWithContents = await Promise.all(
     payments.map(async (payment) => {
-      const contents = await prisma.customContent.findMany({
-        where: { id: { in: payment.contentIds } },
-        include: { screen: true },
-      });
+      // const contents = await prisma.customContent.findMany({
+      //   where: { id: { in: payment.contentIds } },
+      //   include: { screen: true },
+      // });
       return {
-        ...payment,
-        contents, // attach full content objects
-      };
+        ...payment      };
     })
   );
 
@@ -147,13 +145,13 @@ const getSingleCustomPaymentFromDB = async (id: string) => {
   }
 
   // 2️⃣ Fetch content objects based on contentIds
-  const contents = await prisma.customContent.findMany({
-    where: { id: { in: payment.contentIds } },
-    include: { screen: true }, // screen relation include
-  });
+  // const contents = await prisma.customContent.findMany({
+  //   where: { id: { in: payment.contentIds } },
+  //   include: { screen: true }, // screen relation include
+  // });
 
   // 3️⃣ Attach contents to the payment object
-  return { ...payment, contents };
+  return { ...payment };
 };
 
 const getSingleBundlePaymentFromDB = async (id: string) => {
@@ -224,13 +222,12 @@ const getAllCustomPayments = async (query: any) => {
   // 6️⃣ Fetch content for each payment
   const paymentsWithContents = await Promise.all(
     payments.map(async (payment) => {
-      const contents = await prisma.customContent.findMany({
-        where: { id: { in: payment.contentIds } },
-        include: { screen: true },
-      });
+      // const contents = await prisma.customContent.findMany({
+      //   where: { id: { in: payment.contentIds } },
+      //   include: { screen: true },
+      // });
       return {
         ...payment,
-        contents, // attach full content objects
       };
     })
   );
@@ -402,6 +399,7 @@ const checkoutBundle = async (data: any) => {
 };
 
 const checkoutCustom = async (data: any) => {
+  console.log("🚀 ~ checkoutCustom ~ data:", data);
   return await prisma.$transaction(async (tx) => {
     // 1️⃣ Validate customer
     const user = await tx.user.findUnique({
@@ -443,23 +441,9 @@ const checkoutCustom = async (data: any) => {
     );
 
     // 4️⃣ Save uploaded content in CustomContent table
-    const savedContents = [];
-    for (const c of data.content) {
-      const saved = await tx.customContent.create({
-        data: {
-          screenId: c.screenId,
-          url: c.url,
-        },
-      });
-      savedContents.push(saved);
-    }
 
-    if (savedContents.length === 0) {
-      throw new AppError(status.BAD_REQUEST, "No content uploaded");
-    }
 
     // Get all content IDs
-    const contentIds = savedContents.map((c) => c.id);
 
     // 5️⃣ Create CustomCampaign
     const campaign = await tx.customCampaign.create({
@@ -468,7 +452,7 @@ const checkoutCustom = async (data: any) => {
         type: CAMPAIGN_TYPE.custom,
         startDate,
         endDate,
-        contentIds,
+       contentUrls: data.contentUrls,
         customer: { connect: { id: data.customerId } }, // ✅ connect relation
         screens: { connect: screens.map((s) => ({ id: s.id })) },
       },
@@ -481,7 +465,7 @@ const checkoutCustom = async (data: any) => {
         campaignId: campaign.id,
         amount: totalAmount,
         status: "pending",
-        contentIds,
+       contentUrls: data.contentUrls,
         screens: { connect: screens.map((s) => ({ id: s.id })) },
       },
     });
@@ -516,9 +500,12 @@ const checkoutCustom = async (data: any) => {
       url: session.url,
       paymentId: payment.id,
       campaignId: campaign.id,
-      contentIds,
     };
   });
+
+
+
+
 };
 
 export const paymentService = {

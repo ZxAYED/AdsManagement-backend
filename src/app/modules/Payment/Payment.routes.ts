@@ -66,12 +66,7 @@ router.post(
 
 router.post(
   "/checkout-custom",
-  upload.fields(
-    Array.from({ length: 10 }).map((_, i) => ({
-      name: `file${i + 1}`,
-      maxCount: 1,
-    }))
-  ),
+  upload.array("files"),
   RoleValidation(USER_ROLE.customer),
   PaymentController.createCustomPayment
 );

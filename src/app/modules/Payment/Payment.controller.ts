@@ -255,21 +255,29 @@ const create = catchAsync(
 const createCustomPayment = catchAsync(
   async (req: Request & { user?: any; files?: any }, res: Response) => {
     try {
-      // console.log("📦 Uploaded files:", req.files);
-      // console.log("📄 Body data:", req.body.data);
+      console.log("user", req.user)
+      // Step 1: Get files array from 'files' field
+      const files = req.files as Express.Multer.File[];
 
-      const filesObj = req.files as { [key: string]: Express.Multer.File[] } | undefined;
-
-      if (!filesObj) {
-        throw new AppError(status.BAD_REQUEST, "Files upload is required");
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        throw new AppError(status.BAD_REQUEST, "No files uploaded");
       }
 
-      // total uploaded files
-      let totalFiles = 0;
-      for (const key in filesObj) {
-        totalFiles += filesObj[key].length;
+      // Step 2: Upload all files and store URLs
+      const contentUrls: string[] = [];
+
+      for (const file of files) {
+        const fileName = `${Date.now()}_${file.originalname}`;
+        const uploadedUrl = await uploadImageToSupabase(file, fileName); // Upload file
+        contentUrls.push(uploadedUrl); // Store URL
+
+        // Remove local file
+        fs.unlink(file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
       }
-      // console.log("Total files uploaded:", totalFiles);
 
       // parse body data
       const parsedData = JSON.parse(req.body.data || "{}");
@@ -280,46 +288,15 @@ const createCustomPayment = catchAsync(
         throw new AppError(status.BAD_REQUEST, "screenIds array is required in data");
       }
 
-      const screenIds = parsedData.screenIds;
-
-      if (totalFiles < screenIds.length) {
-        throw new AppError(
-          status.BAD_REQUEST,
-          `${screenIds.length} files required, but only ${totalFiles} uploaded`
-        );
-      }
-
-      // upload files and map to screen IDs
-      const contentData: { screenId: string; url: string }[] = [];
-      const fileKeys = Object.keys(filesObj);
-
-      for (let i = 0; i < fileKeys.length; i++) {
-        const fieldName = fileKeys[i];
-        const file = filesObj[fieldName][0];
-        const fileName = `${Date.now()}_${file.originalname}`;
-
-        const uploadedUrl = await uploadImageToSupabase(file, fileName);
-
-        const screenId = screenIds[i];
-        if (!screenId) continue;
-
-        contentData.push({ screenId, url: uploadedUrl });
-
-        // remove local file
-        fs.unlink(file.path, (err) => {
-          if (err) {
-            console.error("❌ Error deleting local file:", err);
-          }
-        });
-      }
+     
 
       const payload = {
         ...parsedData,
         customerId: req.user?.id as string,
-        content: contentData, // [{ screenId, url }, ...]
+        contentUrls: contentUrls, // [{ screenId, url }, ...]
       };
 
-      // console.log("🚀 Final Payload:", payload);
+      console.log("🚀 Final Payload:", payload);
 
       const result = await paymentService.checkoutCustom(payload);
 
