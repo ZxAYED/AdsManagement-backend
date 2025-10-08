@@ -51,13 +51,13 @@ const myselfPayments = async (userId: string, query: any) => {
   // 🔹 Fetch BundleContent details for each payment
   const paymentsWithContent = await Promise.all(
     payments.map(async (payment) => {
-      const contents = await prisma.bundleContent.findMany({
-        where: { id: { in: payment.contentIds } },
-        include: {
-          screen: true,
-        },
-      });
-      return { ...payment, contents };
+      // const contents = await prisma.bundleContent.findMany({
+      //   where: { id: { in: payment.contentIds } },
+      //   include: {
+      //     screen: true,
+      //   },
+      // });
+      return { ...payment };
     })
   );
 
@@ -182,13 +182,10 @@ const getSingleBundlePaymentFromDB = async (id: string) => {
   }
 
   // 2️⃣ Fetch content objects based on contentIds
-  const contents = await prisma.bundleContent.findMany({
-    where: { id: { in: payment.contentIds } },
-    include: { screen: true }, // screen relation include
-  });
+
 
   // 3️⃣ Attach contents to the payment object
-  return { ...payment, contents };
+  return { ...payment };
 };
 
 const getAllCustomPayments = async (query: any) => {
@@ -302,7 +299,7 @@ const getAllBundlePayments = async (query: any) => {
 };
 
 const checkoutBundle = async (data: any) => {
-  // console.log("🚀 ~ checkoutBundle ~ data:", data);
+  console.log("🚀 ~ checkoutBundle ~ data:", data);
 
   return await prisma.$transaction(async (tx) => {
     // 1️⃣ Validate customer
@@ -321,24 +318,24 @@ const checkoutBundle = async (data: any) => {
     const endDate = calculateEndDate(data.startDate, bundle.duration);
 
     // 4️⃣ Save all uploaded content in BundleContent table
-    const savedContents = [];
-    for (const c of data.content) {
-      const saved = await tx.bundleContent.create({
-        data: {
-          bundleId: data.bundleId,
-          screenId: c.screenId,
-          url: c.url,
-        },
-      });
-      savedContents.push(saved);
-    }
+    // const savedContents = [];
+    // for (const c of data.content) {
+    //   const saved = await tx.bundleContent.create({
+    //     data: {
+    //       bundleId: data.bundleId,
+    //       screenId: c.screenId,
+    //       url: c.url,
+    //     },
+    //   });
+    //   savedContents.push(saved);
+    // }
 
-    if (savedContents.length === 0) {
-      throw new AppError(status.BAD_REQUEST, "No content uploaded");
-    }
+    // if (savedContents.length === 0) {
+    //   throw new AppError(status.BAD_REQUEST, "No content uploaded");
+    // }
 
     // Get all content IDs
-    const contentIds = savedContents.map((c) => c.id);
+    // const contentIds = savedContents.map((c) => c.id);
 
     // 5️⃣ Create payment record
     const payment = await tx.bundlePayment.create({
@@ -347,7 +344,8 @@ const checkoutBundle = async (data: any) => {
         bundleId: bundle.id,
         amount: bundle.price,
         status: "pending",
-        contentIds, // save all content IDs
+        contentUrls: data.contentUrls,
+        // contentIds, // save all content IDs
       },
     });
 
@@ -359,7 +357,8 @@ const checkoutBundle = async (data: any) => {
         paymentId: payment.id,
         status: CAMPAIGN_STATUS.notPaid,
         type: CAMPAIGN_TYPE.bundle,
-        contentIds, // save all content IDs
+        contentUrls: data.contentUrls,
+        // contentIds, // save all content IDs
         startDate: new Date(data.startDate),
         endDate,
       },
@@ -397,7 +396,7 @@ const checkoutBundle = async (data: any) => {
       url: session.url,
       paymentId: payment.id,
       campaignId: campaign.id,
-      contentIds,
+      // contentIds,
     };
   });
 };

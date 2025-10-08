@@ -182,6 +182,7 @@ CREATE TABLE "public"."BundlePayment" (
     "status" "public"."PAYMENT_STATUS" NOT NULL DEFAULT 'pending',
     "transactionId" TEXT,
     "contentIds" TEXT[],
+    "contentUrl" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -197,6 +198,7 @@ CREATE TABLE "public"."BundleCampaign" (
     "status" "public"."CAMPAIGN_STATUS" NOT NULL,
     "type" "public"."CAMPAIGN_TYPE" NOT NULL,
     "contentIds" TEXT[],
+    "contentUrl" TEXT NOT NULL,
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

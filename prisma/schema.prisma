@@ -100,8 +100,8 @@ model CustomCampaign {
   startDate  DateTime
   endDate    DateTime
   contentIds String[] // array of BundleContent IDs
-  customer   User     @relation(fields: [customerId], references: [id])
-  screens    Screen[] @relation("CampaignScreens") // many-to-many
+  customer   User            @relation(fields: [customerId], references: [id])
+  screens    Screen[]        @relation("CampaignScreens") // many-to-many
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -125,7 +125,7 @@ model CustomPayment {
 }
 
 model CustomContent {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
   screenId  String
   url       String
@@ -215,7 +215,7 @@ model BundlePayment {
   amount         Float
   status         PAYMENT_STATUS   @default(pending)
   transactionId  String?
-  contentIds     String[] // array of BundleContent IDs
+  contentUrls String[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   BundleCampaign BundleCampaign[]
@@ -228,7 +228,7 @@ model BundleCampaign {
   paymentId  String?
   status     CAMPAIGN_STATUS
   type       CAMPAIGN_TYPE
-  contentIds String[] // array of BundleContent IDs
+  contentUrls String[]
   startDate  DateTime
   endDate    DateTime
   customer   User            @relation(fields: [customerId], references: [id])

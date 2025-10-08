@@ -91,26 +91,126 @@ const getgetSingleBundlePaymentFromDBById = catchAsync(
 );
 
 
+// const create = catchAsync(
+//   async (req: Request & { user?: any; files?: any }, res: Response) => {
+//     try {
+//       console.log("📦 Uploaded files:", req.files);
+//       // console.log("📄 Body data:", req.body.data);
+
+//       // const filesObj = req.files as { [key: string]: Express.Multer.File[] };
+
+//       // // total uploaded files
+//       // let totalFiles = 0;
+//       // for (const key in filesObj) {
+//       //   totalFiles += filesObj[key].length;
+//       // }
+//       // // console.log("Total files uploaded:", totalFiles);
+
+//       // // parse body data
+//       // const parsedData = JSON.parse(req.body.data || "{}");
+//       // // console.log("✅ Parsed data:", parsedData);
+
+//       // // find bundle
+//       // const findBundle = await prisma.bundle.findUnique({
+//       //   where: { id: parsedData.bundleId },
+//       //   include: { screens: true },
+//       // });
+
+//       // if (!findBundle) {
+//       //   throw new AppError(status.BAD_REQUEST, "Bundle not found");
+//       // }
+
+//       // // ensure all files are uploaded
+//       // if (totalFiles < findBundle.screens.length) {
+//       //   throw new AppError(
+//       //     status.BAD_REQUEST,
+//       //     `${findBundle.screens.length} files required, but only ${totalFiles} uploaded`
+//       //   );
+//       // }
+
+//       // // upload files and map to screen IDs
+//       // const contentData: { screenId: string; url: string }[] = [];
+//       // const screens = findBundle.screens;
+
+//       // for (let i = 0; i < Object.keys(filesObj).length; i++) {
+//       //   const fieldName = Object.keys(filesObj)[i];
+//       //   const file = filesObj[fieldName][0];
+//       //   const fileName = `${Date.now()}_${file.originalname}`;
+
+//       //   const uploadedUrl = await uploadImageToSupabase(file, fileName);
+
+//       //   // map to screen id
+//       //   const screenId = screens[i]?.id;
+//       //   if (!screenId) continue;
+
+//       //   contentData.push({ screenId, url: uploadedUrl });
+
+//       //   // remove local file
+//       //    fs.unlink(file.path, (err) => {
+//       //     if (err) {
+//       //       console.error("❌ Error deleting local file:", err);
+//       //     }
+//       //   });
+//       // }
+
+//       // const payload = {
+//       //   ...parsedData,
+//       //   customerId: req.user?.id as string,
+//       //   content: contentData, // [{ screenId, url }, ...]
+//       // };
+
+//       // console.log("🚀 Final Payload:", payload);
+
+//       // const result = await paymentService.checkoutBundle(payload);
+
+//       sendResponse(res, {
+//         statusCode: status.CREATED,
+//         success: true,
+//         message: "Media uploaded and payment session created successfully",
+//         data: {
+//           session: "result",
+//         },
+//       });
+//     } catch (error: any) {
+//       console.error("❌ Error in create controller:", error);
+//       throw error;
+//     }
+//   }
+// );
+
+
 const create = catchAsync(
   async (req: Request & { user?: any; files?: any }, res: Response) => {
     try {
-      // console.log("📦 Uploaded files:", req.files);
-      // console.log("📄 Body data:", req.body.data);
 
-      const filesObj = req.files as { [key: string]: Express.Multer.File[] };
+      console.log("user", req.user)
+      // Step 1: Get files array from 'files' field
+      const files = req.files as Express.Multer.File[];
 
-      // total uploaded files
-      let totalFiles = 0;
-      for (const key in filesObj) {
-        totalFiles += filesObj[key].length;
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        throw new AppError(status.BAD_REQUEST, "No files uploaded");
       }
-      // console.log("Total files uploaded:", totalFiles);
 
-      // parse body data
+      // Step 2: Upload all files and store URLs
+      const contentUrls: string[] = [];
+
+      for (const file of files) {
+        const fileName = `${Date.now()}_${file.originalname}`;
+        const uploadedUrl = await uploadImageToSupabase(file, fileName); // Upload file
+        contentUrls.push(uploadedUrl); // Store URL
+
+        // Remove local file
+        fs.unlink(file.path, (err) => {
+          if (err) {
+            console.error("❌ Error deleting local file:", err);
+          }
+        });
+      }
+
+      // Step 3: Parse body
       const parsedData = JSON.parse(req.body.data || "{}");
-      // console.log("✅ Parsed data:", parsedData);
 
-      // find bundle
+      // Step 4: Find bundle
       const findBundle = await prisma.bundle.findUnique({
         where: { id: parsedData.bundleId },
         include: { screens: true },
@@ -120,49 +220,19 @@ const create = catchAsync(
         throw new AppError(status.BAD_REQUEST, "Bundle not found");
       }
 
-      // ensure all files are uploaded
-      if (totalFiles < findBundle.screens.length) {
-        throw new AppError(
-          status.BAD_REQUEST,
-          `${findBundle.screens.length} files required, but only ${totalFiles} uploaded`
-        );
-      }
-
-      // upload files and map to screen IDs
-      const contentData: { screenId: string; url: string }[] = [];
-      const screens = findBundle.screens;
-
-      for (let i = 0; i < Object.keys(filesObj).length; i++) {
-        const fieldName = Object.keys(filesObj)[i];
-        const file = filesObj[fieldName][0];
-        const fileName = `${Date.now()}_${file.originalname}`;
-
-        const uploadedUrl = await uploadImageToSupabase(file, fileName);
-
-        // map to screen id
-        const screenId = screens[i]?.id;
-        if (!screenId) continue;
-
-        contentData.push({ screenId, url: uploadedUrl });
-
-        // remove local file
-         fs.unlink(file.path, (err) => {
-          if (err) {
-            console.error("❌ Error deleting local file:", err);
-          }
-        });
-      }
-
+      // Step 5: Create payload
       const payload = {
         ...parsedData,
         customerId: req.user?.id as string,
-        content: contentData, // [{ screenId, url }, ...]
+        contentUrls, // Use new field for array of uploaded file URLs
       };
 
-      // console.log("🚀 Final Payload:", payload);
+      console.log(payload)
 
+      // Step 6: Call service
       const result = await paymentService.checkoutBundle(payload);
 
+      // Step 7: Response
       sendResponse(res, {
         statusCode: status.CREATED,
         success: true,
@@ -177,6 +247,8 @@ const create = catchAsync(
     }
   }
 );
+
+
 
 
 
