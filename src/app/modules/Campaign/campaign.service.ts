@@ -95,14 +95,14 @@ if (dateFilter) {
   // 4️⃣ Fetch BundleContent details for each campaign
   const resultWithContents = await Promise.all(
     result.map(async (campaign) => {
-      let contents: any[] = [];
-      if (campaign.payment?.contentIds?.length) {
-        contents = await prisma.bundleContent.findMany({
-          where: { id: { in: campaign.payment.contentIds } },
-          include: { screen: true },
-        });
-      }
-      return { ...campaign, contents };
+      // let contents: any[] = [];
+      // if (campaign.payment?.contentIds?.length) {
+      //   contents = await prisma.bundleContent.findMany({
+      //     where: { id: { in: campaign.payment.contentIds } },
+      //     include: { screen: true },
+      //   });
+      // }
+      return { ...campaign };
     })
   );
 
@@ -201,14 +201,14 @@ const getSingleBundleCampaignFromDB = async (id: string) => {
     throw new AppError(status.NOT_FOUND, "Campaign not found");
   }
 
-  const contents = await prisma.bundleContent.findMany({
-    where: { id: { in: isCampaignExists.contentIds } },
-    include: {
-      screen: true,
-    },
-  });
+  // const contents = await prisma.bundleContent.findMany({
+  //   where: { id: { in: isCampaignExists.contentIds } },
+  //   include: {
+  //     screen: true,
+  //   },
+  // });
 
-  return { ...isCampaignExists, contents };
+  return { ...isCampaignExists };
 };
 
 const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
@@ -525,14 +525,14 @@ if (dateFilter) {
   // 5️⃣ Fetch BundleContent details for each campaign
   const resultWithContents = await Promise.all(
     result.map(async (campaign) => {
-      let contents: any[] = [];
-      if (campaign.payment?.contentIds?.length) {
-        contents = await prisma.bundleContent.findMany({
-          where: { id: { in: campaign.payment.contentIds } },
-          include: { screen: true }, // include screen info for each content
-        });
-      }
-      return { ...campaign, contents }; // attach contents as a separate property
+      // let contents: any[] = [];
+      // if (campaign.payment?.contentIds?.length) {
+      //   contents = await prisma.bundleContent.findMany({
+      //     where: { id: { in: campaign.payment.contentIds } },
+      //     include: { screen: true }, // include screen info for each content
+      //   });
+      // }
+      return { ...campaign }; // attach contents as a separate property
     })
   );
 
