@@ -92,16 +92,17 @@ model FavouriteScreen {
 }
 
 model CustomCampaign {
-  id         String          @id @default(uuid())
-  customerId String
-  paymentId  String?
-  status     CAMPAIGN_STATUS
-  type       CAMPAIGN_TYPE   @default(custom)
-  startDate  DateTime
-  endDate    DateTime
-  contentIds String[] // array of BundleContent IDs
-  customer   User            @relation(fields: [customerId], references: [id])
-  screens    Screen[]        @relation("CampaignScreens") // many-to-many
+  id          String          @id @default(uuid())
+  customerId  String
+  paymentId   String?
+  status      CAMPAIGN_STATUS
+  type        CAMPAIGN_TYPE   @default(custom)
+  startDate   DateTime
+  endDate     DateTime
+  // contentIds String[] // array of BundleContent IDs
+  contentUrls String[]
+  customer User     @relation(fields: [customerId], references: [id])
+  screens  Screen[] @relation("CampaignScreens") // many-to-many
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -119,7 +120,8 @@ model CustomPayment {
   transactionId String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  contentIds    String[] // array of BundleContent IDs
+  // contentIds    String[] // array of BundleContent IDs
+  contentUrls   String[]
   // New relation
   screens       Screen[]       @relation("PaymentScreens")
 }
@@ -215,27 +217,27 @@ model BundlePayment {
   amount         Float
   status         PAYMENT_STATUS   @default(pending)
   transactionId  String?
-  contentUrls String[]
+  contentUrls    String[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   BundleCampaign BundleCampaign[]
 }
 
 model BundleCampaign {
-  id         String          @id @default(uuid())
-  bundleId   String
-  customerId String
-  paymentId  String?
-  status     CAMPAIGN_STATUS
-  type       CAMPAIGN_TYPE
+  id          String          @id @default(uuid())
+  bundleId    String
+  customerId  String
+  paymentId   String?
+  status      CAMPAIGN_STATUS
+  type        CAMPAIGN_TYPE
   contentUrls String[]
-  startDate  DateTime
-  endDate    DateTime
-  customer   User            @relation(fields: [customerId], references: [id])
-  payment    BundlePayment?  @relation(fields: [paymentId], references: [id])
-  bundle     Bundle          @relation(fields: [bundleId], references: [id])
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  startDate   DateTime
+  endDate     DateTime
+  customer    User            @relation(fields: [customerId], references: [id])
+  payment     BundlePayment?  @relation(fields: [paymentId], references: [id])
+  bundle      Bundle          @relation(fields: [bundleId], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 }
 
 model BundleContent {
