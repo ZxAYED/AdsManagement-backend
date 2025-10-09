@@ -77,7 +77,11 @@ if (dateFilter) {
     },
     include: {
       payment: true,
-      bundle: true,
+      bundle: {
+        include:{
+          screens:true
+        }
+      },
       customer: {
         select: {
           id: true,
