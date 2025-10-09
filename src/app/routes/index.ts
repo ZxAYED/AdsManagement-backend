@@ -6,6 +6,7 @@ import { ScreenRoutes } from "../modules/Screen/Screen.routes";
 import { UserDataRoutes } from "../modules/User/user.route";
 import { PaymentRoutes } from "../modules/Payment/Payment.routes";
 import { CampaignRoutes } from "../modules/Campaign/campaign.route";
+import { getInTouchRoutes } from "../modules/GetInTouch/getInTouch.route";
 
 const router = express.Router();
 
@@ -37,6 +38,10 @@ const moduleRoutes = [
   {
     path: "/campaign",
     route: CampaignRoutes,
+  },
+  {
+    path: "/get-in-touch",
+    route: getInTouchRoutes,
   },
   
 ];
