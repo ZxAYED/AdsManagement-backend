@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String            @id @default(uuid())
+  first_name        String
+  last_name         String
+  phone             String
+  email             String            @unique
+  password          String
+  organisation_name String
+  role              USER_ROLE
+  organisation_role ORGANISATION_ROLE
+  otp               String?
+  otp_expires_at    DateTime?
+  is_verified       Boolean           @default(false)
+
+  password_reset_otp     String?
+  password_reset_expires DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status           USER_STATUS       @default(active)
+  Banner           Banner[]
+  sentMessages     Message[]         @relation("SentMessages")
+  receivedMessages Message[]         @relation("ReceivedMessages")
+  Notification     Notification[]
+  BundleCampaign   BundleCampaign[]
+  BundlePayment    BundlePayment[]
+  CustomCampaign   CustomCampaign[]
+  CustomPayment    CustomPayment[]
+  FavouriteScreen  FavouriteScreen[]
+}
+
+enum USER_STATUS {
+  active
+  blocked
+}
+
+enum USER_ROLE {
+  customer
+  admin
+}
+
+enum ORGANISATION_ROLE {
+  advertiser
+  agency
+}
+
+model Screen {
+  id           String              @id @default(uuid())
+  slug         String              @unique
+  screen_name  String
+  screen_size  String
+  description  String
+  resolution   String
+  lat          String
+  lng          String
+  img_url      String
+  price        Float
+  // duration     String
+  availability SCREEN_AVAILABILITY
+  status       SCREEN_STATUS
+  location     String
+  isDeleted    Boolean             @default(false)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  bundles         Bundle[]          @relation("BundleScreens")
+  CustomCampaigns CustomCampaign[]  @relation("CampaignScreens") // many-to-many only
+  CustomPayments  CustomPayment[]   @relation("PaymentScreens")
+  FavouriteScreen FavouriteScreen[]
+  BundleContent   BundleContent[]
+  CustomContent   CustomContent[]
+}
+
+model FavouriteScreen {
+  id        String   @id @default(uuid())
+  screenId  String
+  screen    Screen   @relation(fields: [screenId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CustomCampaign {
+  id          String          @id @default(uuid())
+  customerId  String
+  paymentId   String?
+  status      CAMPAIGN_STATUS
+  type        CAMPAIGN_TYPE   @default(custom)
+  startDate   DateTime
+  endDate     DateTime
+  // contentIds String[] // array of BundleContent IDs
+  contentUrls String[]
+  customer    User            @relation(fields: [customerId], references: [id])
+  screens     Screen[]        @relation("CampaignScreens") // many-to-many
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  CustomPayment CustomPayment[]
+}
+
+model CustomPayment {
+  id            String         @id @default(uuid())
+  customerId    String
+  user          User           @relation(fields: [customerId], references: [id])
+  campaignId    String
+  campaign      CustomCampaign @relation(fields: [campaignId], references: [id])
+  amount        Float
+  status        PAYMENT_STATUS @default(pending)
+  transactionId String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  // contentIds    String[] // array of BundleContent IDs
+  contentUrls   String[]
+  // New relation
+  screens       Screen[]       @relation("PaymentScreens")
+}
+
+model CustomContent {
+  id String @id @default(uuid())
+
+  screenId  String
+  url       String
+  screen    Screen   @relation(fields: [screenId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum SCREEN_AVAILABILITY {
+  available
+  maintenance
+}
+
+enum SCREEN_STATUS {
+  active
+  occupied
+}
+
+model Bundle {
+  id          String        @id @default(uuid())
+  bundle_name String
+  slug        String        @unique
+  isDeleted   Boolean       @default(false)
+  screens     Screen[]      @relation("BundleScreens")
+  img_url     String
+  price       Float
+  duration    String
+  status      BUNDLE_STATUS
+  location    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  BundleCampaign BundleCampaign[]
+  BundlePayment  BundlePayment[]
+  BundleContent  BundleContent[]
+}
+
+model Banner {
+  id      String @id @default(uuid())
+  img_url String
+  adminId String
+  admin   User   @relation(fields: [adminId], references: [id])
+}
+
+enum BUNDLE_STATUS {
+  ongoing
+  expired
+}
+
+enum PAYMENT_STATUS {
+  pending
+  success
+  failed
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  text       String?
+  isSeen     Boolean  @default(false)
+  // fileUrl    String?
+  // fileType   String?
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model Notification {
+  id                 String   @id @default(uuid())
+  userId             String
+  notificationType   String
+  notificationDetail String
+  isSeen             Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model BundlePayment {
+  id             String           @id @default(uuid())
+  customerId     String
+  user           User             @relation(fields: [customerId], references: [id])
+  bundleId       String
+  bundle         Bundle           @relation(fields: [bundleId], references: [id])
+  amount         Float
+  status         PAYMENT_STATUS   @default(pending)
+  transactionId  String?
+  contentUrls    String[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  BundleCampaign BundleCampaign[]
+}
+
+model BundleCampaign {
+  id          String          @id @default(uuid())
+  bundleId    String
+  customerId  String
+  paymentId   String?
+  status      CAMPAIGN_STATUS
+  type        CAMPAIGN_TYPE
+  contentUrls String[]
+  startDate   DateTime
+  endDate     DateTime
+  customer    User            @relation(fields: [customerId], references: [id])
+  payment     BundlePayment?  @relation(fields: [paymentId], references: [id])
+  bundle      Bundle          @relation(fields: [bundleId], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model BundleContent {
+  id        String   @id @default(uuid())
+  bundleId  String
+  screenId  String
+  url       String
+  bundle    Bundle   @relation(fields: [bundleId], references: [id])
+  screen    Screen   @relation(fields: [screenId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CAMPAIGN_TYPE {
+  bundle // campaign based on a bundle
+  custom // campaign based on selected screens
+}
+
+enum CAMPAIGN_STATUS {
+  notPaid
+  pending
+  running
+  completed
+}
