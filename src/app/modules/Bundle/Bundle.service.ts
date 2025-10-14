@@ -129,7 +129,7 @@ const postBundleIntoDB = async (data: {
   price: number;
   duration: string;
   status: BUNDLE_STATUS;
-  location: string;
+
   screens: { screen_id: string }[];
   img_url: string;
   slug: string;
