@@ -26,7 +26,7 @@ router.get("/", ScreenController.getAll);
 router.get("/:slug", ScreenController.getById);
 router.post(
   "/",
-  upload.single("file"),
+  upload.array("files"),
   RoleValidation(USER_ROLE.admin),
   ScreenController.create
 );
