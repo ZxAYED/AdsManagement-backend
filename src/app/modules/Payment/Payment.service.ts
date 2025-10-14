@@ -371,7 +371,7 @@ const checkoutBundle = async (data: any) => {
             currency: "usd",
             product_data: {
               name: bundle.bundle_name,
-              description: `Duration: ${bundle.duration}, Location: ${bundle.location}`,
+              description: `Duration: ${bundle.duration},`,
             },
             unit_amount: Math.round(bundle.price * 100),
           },
