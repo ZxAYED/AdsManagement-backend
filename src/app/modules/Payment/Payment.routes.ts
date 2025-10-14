@@ -51,18 +51,6 @@ router.post(
   RoleValidation(USER_ROLE.customer),
   PaymentController.create
 );
-// router.post(
-//   "/checkout-bundle",
-//   upload.fields(
-//     Array.from({ length: 10 }).map((_, i) => ({
-//       name: `file${i + 1}`,
-//       maxCount: 1,
-//     }))
-//   ), // max 10টা screen ধরা হলো
-//   RoleValidation(USER_ROLE.customer),
-//   RoleValidation(USER_ROLE.customer),
-//   PaymentController.create
-// );
 
 router.post(
   "/checkout-custom",

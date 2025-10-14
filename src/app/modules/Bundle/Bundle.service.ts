@@ -19,7 +19,7 @@ const getAllBundleFromDB = async (query: any) => {
 
   // Step 1: Get bundles (excluding Payment data)
   const bundles = await prisma.bundle.findMany({
-    where: { ...whereConditions, isDeleted: false },
+    where: { ...whereConditions, isDeleted: false},
     skip,
     take: limit,
     orderBy: { [sortBy]: sortOrder },
@@ -93,7 +93,7 @@ const getSingleBundleFromDB = async (slug: string) => {
 const getSingleBundleByIdFromDB = async (id: string) => {
   // Step 1: Check if bundle exists and is not deleted
   const isBundleExist = await prisma.bundle.findFirst({
-    where: { id:id, isDeleted: false },
+    where: { id: id, isDeleted: false },
   });
 
   if (!isBundleExist) {
@@ -179,6 +179,7 @@ const postBundleIntoDB = async (data: {
   return await prisma.bundle.create({
     data: {
       ...data,
+      status: BUNDLE_STATUS.ongoing,
       screens: { connect: validScreenIds.map((id) => ({ id })) },
     },
     include: { screens: true },
@@ -302,5 +303,5 @@ export const BundleService = {
   updateBundleIntoDB,
   deleteBundleFromDB,
   getAvailableBundlesFromDB,
-  getSingleBundleByIdFromDB
+  getSingleBundleByIdFromDB,
 };
