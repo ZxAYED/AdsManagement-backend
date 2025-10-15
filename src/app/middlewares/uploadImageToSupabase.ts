@@ -1,27 +1,22 @@
 import fs from "fs";
-import mime from "mime-types"; // ✅ auto detect content-type
 import { supabase } from "./supabaseClient";
 
 export const uploadImageToSupabase = async (
-  localFilePath: string,
+  file: Express.Multer.File, // assuming you're using multer
   fileName: string
 ) => {
-  // console.log({ localFilePath, fileName });
+  const fileBuffer = fs.readFileSync(file.path);
 
-  const fileBuffer = fs.readFileSync(localFilePath);
+  const contentType = file.mimetype;
 
-  // Dynamically detect content type from file extension
-  const contentType = mime.lookup(localFilePath);
-
-  if (!contentType || !contentType.startsWith("image/")) {
-    throw new Error("Unsupported or invalid image type");
+  if (!contentType || (!contentType.startsWith("image/") && !contentType.startsWith("video/"))) {
+    throw new Error("Unsupported or invalid file type. Only images and videos are allowed.");
   }
 
-  const filePath = `images/${fileName}`;
+  const filePath = `media/${fileName}`;
 
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from("attachments")
-    // .from("certificates")
     .upload(filePath, fileBuffer, {
       contentType: contentType,
       upsert: true,

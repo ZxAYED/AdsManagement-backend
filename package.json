@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "NODE_ENV=production node ./dist/server.js"
+    "start": "NODE_ENV=production node ./dist/server.js",
+    "start:prod": "npx prisma migrate deploy && npx prisma generate && npm run start"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
     "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.2.0",
+    "@types/nodemailer": "^7.0.1",
     "prisma": "^6.5.0",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.19.3",
@@ -31,7 +33,7 @@
     "@prisma/client": "^6.13.0",
     "@supabase/supabase-js": "^2.54.0",
     "@types/bcrypt": "^5.0.2",
-    "axios": "^1.11.0",
+    "axios": "^1.12.2",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -43,8 +45,11 @@
     "jsonwebtoken": "^9.0.2",
     "mime-types": "^3.0.1",
     "multer": "^2.0.2",
+    "nanoid": "^5.1.5",
     "node-cron": "^4.2.1",
+    "nodemailer": "^7.0.6",
     "stripe": "^18.4.0",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "ws": "^8.18.3"
   }
 }

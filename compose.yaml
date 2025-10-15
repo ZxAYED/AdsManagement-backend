@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    image: arafat2025/danaj_app:latest
+    container_name: danaj_app
+    restart: unless-stopped
+    platform: linux/amd64
+    ports:
+      - "3015:3015"
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/usr/src/app/uploads

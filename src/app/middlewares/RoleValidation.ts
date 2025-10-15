@@ -24,7 +24,7 @@ const RoleValidation = (...roles: string[]) => {
         token,
         config.jwt.access_token_secret as Secret
       );
-
+      
       if (roles.length && !roles.includes(verifiedUser.role)) {
         res.status(403).json({
           success: false,
@@ -39,7 +39,6 @@ const RoleValidation = (...roles: string[]) => {
         },
         select: {
           id: true,
-          name: true,
           email: true,
         },
       });
