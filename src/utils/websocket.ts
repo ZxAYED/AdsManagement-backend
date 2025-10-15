@@ -53,7 +53,7 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
     ws.on("close", () => {
       if (ws.userId) {
         onlineUsers.delete(ws.userId);
-        console.log(`User ${ws.userId} disconnected`);
+
       }
     });
 

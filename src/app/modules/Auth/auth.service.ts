@@ -1,13 +1,13 @@
-import prisma from "../../../shared/prisma";
+import { User, USER_ROLE } from "@prisma/client";
 import bcrypt from "bcrypt";
-import config from "../../../config";
-import { Secret } from "jsonwebtoken";
-import { jwtHelpers } from "../../../helpers/jwtHelpers";
-import AppError from "../../Errors/AppError";
 import status from "http-status";
-import { ORGANISATION_ROLE, User, USER_ROLE } from "@prisma/client";
+import { Secret } from "jsonwebtoken";
+import config from "../../../config";
+import { jwtHelpers } from "../../../helpers/jwtHelpers";
+import prisma from "../../../shared/prisma";
 import { sendOtpEmail } from "../../../utils/sendOtpEmail";
 import { sendPasswordResetOtp } from "../../../utils/sendResetPasswordOtp";
+import AppError from "../../Errors/AppError";
 
 const createUser = async (payload: User) => {
   // Step 1: Check if user already exists
@@ -34,10 +34,10 @@ const createUser = async (payload: User) => {
     otp_expires_at: otpExpiresAt,
     is_verified: false,
     role: USER_ROLE.customer,
-    organisation_role: ORGANISATION_ROLE.advertiser,
+    organisation_role: payload.organisation_role,
   };
 
-  console.log("📨 OTP generated:", otp);
+
 
   const result = await prisma.user.create({
     data: userData,
@@ -79,7 +79,7 @@ const resendOtp = async (email: string) => {
     },
   });
 
-  console.log("📨 New OTP generated:", otp);
+
 
   // Step 4: Send OTP email
   await sendOtpEmail(email, otp);
