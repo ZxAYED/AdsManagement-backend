@@ -63,7 +63,7 @@ model Screen {
   resolution   String
   lat          String
   lng          String
-  imageUrls    String[]
+  imageUrls    Json
   price        Float
   availability SCREEN_AVAILABILITY
   status       SCREEN_STATUS
