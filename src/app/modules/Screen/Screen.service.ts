@@ -4,6 +4,7 @@ import { paginationHelper } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
+import { deleteImageFromSupabase } from "../../middlewares/deleteImageFromSupabase";
 
 const ScreenSearchableFields = ["slug", "screen_name"];
 
@@ -68,10 +69,93 @@ const postScreenIntoDB = async (data: Screen) => {
   return await prisma.screen.create({
     data: {
       ...data,
+      imageUrls:data.imageUrls as any,
       status: SCREEN_STATUS.active,
       availability: SCREEN_AVAILABILITY.available,
     },
   });
+};
+
+
+const updateSingleImageUrl = async (
+  id: string,
+  index: number,
+  newUrl: string
+) => {
+  const screen = await prisma.screen.findUnique({
+    where: { id },
+  });
+
+  if (!screen) {
+    throw new AppError(status.NOT_FOUND, "Screen not found");
+  }
+
+  const imageUrls = screen.imageUrls as { index: number; url: string }[];
+
+  if (!Array.isArray(imageUrls)) {
+    throw new AppError(status.BAD_REQUEST, "Invalid imageUrls format");
+  }
+
+  // পুরনো image URL বের করা
+  const oldImage = imageUrls.find((img) => img.index === index);
+
+  // নতুন array তৈরি
+  const updatedImages = imageUrls.map((img) =>
+    img.index === index ? { ...img, url: newUrl } : img
+  );
+
+  const result = await prisma.screen.update({
+    where: { id },
+    data: {
+      imageUrls: updatedImages,
+    },
+  });
+
+  // delete image from supabase
+  if (oldImage?.url) {
+    await deleteImageFromSupabase(oldImage.url);
+  }
+
+  return result;
+};
+
+const deleteSingleImageUrl = async (id: string,index: number, ) => {
+  const screen = await prisma.screen.findUnique({
+    where: { id },
+  });
+
+  if (!screen) {
+    throw new AppError(status.NOT_FOUND, "Screen not found");
+  }
+
+  const imageUrls = screen.imageUrls as { index: number; url: string }[];
+
+  if (!Array.isArray(imageUrls)) {
+    throw new AppError(status.BAD_REQUEST, "Invalid imageUrls format");
+  }
+
+  // ✅ পুরনো image বের করা
+  const deletedImage = imageUrls.find((img) => img.index === index);
+  if (!deletedImage) {
+    throw new AppError(status.NOT_FOUND, "Image not found at given index");
+  }
+
+  // ✅ Supabase থেকে image delete করা
+  await deleteImageFromSupabase(deletedImage.url);
+
+  // ✅ ঐ image বাদ দিয়ে বাকি গুলা রাখো
+  const updatedImages = imageUrls
+    .filter((img) => img.index !== index)
+    .map((img, i) => ({ ...img, index: i })); // index আবার রিসেট করো
+
+  const result = await prisma.screen.update({
+    where: { id },
+    data: {
+      imageUrls: updatedImages,
+    },
+  });
+
+  return result;
 };
 
 const updateScreenIntoDB = async ({ id, ...data }: any) => {
@@ -229,5 +313,7 @@ export const ScreenService = {
   changeAvaillabilityStatusToMaintannence,
   changeAvaillabilityStatusToAvailable,
   topSalesScreens,
-  getNewArrivalsScreens
+  getNewArrivalsScreens,
+  updateSingleImageUrl,
+  deleteSingleImageUrl
 };
