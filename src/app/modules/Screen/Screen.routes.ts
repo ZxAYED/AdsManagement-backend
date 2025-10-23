@@ -120,16 +120,12 @@ router.patch(
 );
 
 router.patch(
-  "/change-availability-status-maintenance/:id",
+  "/change-availability-status/:id",
   RoleValidation(USER_ROLE.admin),
-  ScreenController.changeAvaillabilityStatusToMaintannence
+  ScreenController.changeAvaillabilityStatus
 );
 
-router.patch(
-  "/change-availability-status-available/:id",
-  RoleValidation(USER_ROLE.admin),
-  ScreenController.changeAvaillabilityStatusToAvailable
-);
+
 
 router.delete(
   "/delete-single-image/:id",
