@@ -239,6 +239,40 @@ const deleteSingleImage = catchAsync(
   }
 );
 
+const addNewImage = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {
+    const { id } = req.params;
+    const files = req.files as Express.Multer.File[];
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No image files provided",
+      });
+    }
+
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      const fileName = `${Date.now()}_${file.originalname}`;
+      const uploadedUrl = await uploadImageToSupabase(file, fileName);
+      uploadedUrls.push(uploadedUrl);
+
+      fs.unlink(file.path, (err) => {
+        if (err) console.error("❌ Error deleting local file:", err);
+      });
+    }
+
+    const updatedScreen = await ScreenService.addNewImage(id, uploadedUrls);
+
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Images uploaded successfully",
+      data: updatedScreen,
+    });
+  }
+);
+
 const update = catchAsync(async (req: Request, res: Response) => {
   const payload: any = { ...req.body, id: req.params.id };
 
@@ -356,10 +390,10 @@ export const ScreenController = {
   addFavouriteScreen,
   getMySelfFavouriteScreen,
   updateSingleImage,
-
   changeAvaillabilityStatusToMaintannence,
   changeAvaillabilityStatusToAvailable,
   topSalesScreens,
   getNewArrivalsScreens,
-  deleteSingleImage
+  deleteSingleImage,
+  addNewImage,
 };

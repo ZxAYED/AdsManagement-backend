@@ -158,6 +158,38 @@ const deleteSingleImageUrl = async (id: string,index: number, ) => {
   return result;
 };
 
+// services/screen.service.ts
+const addNewImage= async (id: string, newUrls: string[]) => {
+  const screen = await prisma.screen.findUnique({
+    where: { id },
+  });
+
+  if (!screen) {
+    throw new AppError(status.NOT_FOUND, "Screen not found");
+  }
+
+  const imageUrls = screen.imageUrls as { index: number; url: string }[] || [];
+
+  
+  const startingIndex = imageUrls.length;
+  const newImageEntries = newUrls.map((url, i) => ({
+    index: startingIndex + i,
+    url,
+  }));
+
+  const updatedImages = [...imageUrls, ...newImageEntries];
+
+  const result = await prisma.screen.update({
+    where: { id },
+    data: {
+      imageUrls: updatedImages,
+    },
+  });
+
+  return result;
+};
+
+
 const updateScreenIntoDB = async ({ id, ...data }: any) => {
   const isScreenExist = await prisma.screen.findFirst({
     where: { id, isDeleted: false },
@@ -315,5 +347,6 @@ export const ScreenService = {
   topSalesScreens,
   getNewArrivalsScreens,
   updateSingleImageUrl,
-  deleteSingleImageUrl
+  deleteSingleImageUrl,
+  addNewImage
 };
