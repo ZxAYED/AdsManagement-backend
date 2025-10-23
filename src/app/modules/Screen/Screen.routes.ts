@@ -89,7 +89,7 @@ router.get(
   ScreenController.getNewArrivalsScreens
 );
 
-// ✅ Image update route আগে রাখো (slug conflict এড়াতে)
+
 router.patch(
   "/update-single-image/:id",
   upload.single("file"),
@@ -104,6 +104,13 @@ router.post(
   upload.array("files"),
   RoleValidation(USER_ROLE.admin),
   ScreenController.create
+);
+
+router.post(
+  "/add-screen-images/:id",
+  upload.array("files", 10),
+  RoleValidation(USER_ROLE.admin),
+  ScreenController.addNewImage
 );
 
 router.patch(
