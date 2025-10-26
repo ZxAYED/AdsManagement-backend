@@ -103,6 +103,32 @@ const myselfAllCustomCampaignFromDB = catchAsync(
     });
   }
 );
+const makeUploadedContentDoneForBundleCampaign = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {  
+    const result = await CampaignService.makeUploadedContentDoneForBundleCampaign(
+      req.params.id
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Content Upload Status updated successfully",
+      data: result,
+    });
+  }
+);
+const makeUploadedContentDoneForCustomCampaign = catchAsync(
+  async (req: Request & { user?: any }, res: Response) => {  
+    const result = await CampaignService.makeUploadedContentDoneForCustomCampaign(
+      req.params.id
+    );
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Content Upload Status updated successfully",
+      data: result,
+    });
+  }
+);
 
 export const campaignController = {
   getAllBundleCampaignFromDB,
@@ -111,4 +137,6 @@ export const campaignController = {
   myselfAllCustomCampaignFromDB,
   getSingleBundleCampaignFromDB,
   getSingleCustomCampaignFromDB,
+  makeUploadedContentDoneForBundleCampaign,
+  makeUploadedContentDoneForCustomCampaign
 };
