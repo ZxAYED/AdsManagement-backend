@@ -66,7 +66,7 @@ const getAllCustomCampaignFromDB = catchAsync(
 
 const myselfAllBundleCampaignFromDB = catchAsync(
   async (req: Request & { user?: any }, res: Response) => {
-    console.log(req.query, "controller....");
+    // console.log(req.query, "controller....");
 
     const { dateFilter, ...restQuery } = req.query; // ✅ extract dateFilter separately
     const query = { ...restQuery }; // ✅ this is the cleaned query without dateFilter
