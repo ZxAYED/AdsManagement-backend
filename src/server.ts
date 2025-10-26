@@ -23,6 +23,7 @@ async function ensureAdmin() {
         last_name: "Admin",
         phone: "+8801712345678",
         email: "admin@scneads.com",
+        image: 'https://pgjshjuaucajeruviwbi.supabase.co/storage/v1/object/public/attachments/media/Image-1761447102213',
         password: hashedPassword,
         organisation_name: "SCNE Ads",
         role: USER_ROLE.admin,

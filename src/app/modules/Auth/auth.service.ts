@@ -10,6 +10,7 @@ import { sendOtpEmail } from "../../../utils/sendOtpEmail";
 import { sendPasswordResetOtp } from "../../../utils/sendResetPasswordOtp";
 
 const createUser = async (payload: User) => {
+  console.log({payload})
   // Step 1: Check if user already exists
   const isUserExist = await prisma.user.findFirst({
     where: { email: payload.email },

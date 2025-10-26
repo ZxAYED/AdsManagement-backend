@@ -13,6 +13,7 @@ model User {
   last_name         String
   phone             String
   email             String            @unique
+  image             String
   password          String
   organisation_name String
   role              USER_ROLE
@@ -101,6 +102,7 @@ model CustomCampaign {
   endDate     DateTime
   // contentIds String[] // array of BundleContent IDs
   contentUrls String[]
+  isUploaded  Boolean         @default(false)
   customer    User            @relation(fields: [customerId], references: [id])
   screens     Screen[]        @relation("CampaignScreens") // many-to-many
 
@@ -230,6 +232,7 @@ model BundleCampaign {
   status      CAMPAIGN_STATUS
   type        CAMPAIGN_TYPE
   contentUrls String[]
+  isUploaded  Boolean         @default(false)
   startDate   DateTime
   endDate     DateTime
   customer    User            @relation(fields: [customerId], references: [id])

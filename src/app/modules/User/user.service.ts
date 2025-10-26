@@ -4,7 +4,7 @@ import prisma from "../../../shared/prisma";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 import AppError from "../../Errors/AppError";
 import status from "http-status";
-import {  USER_STATUS } from "@prisma/client";
+import { USER_STATUS } from "@prisma/client";
 
 const UserSearchableFields: any = ["first_name", "last_name", "email", "phone"];
 
@@ -33,6 +33,7 @@ const getAllUsers = async (options: any) => {
       email: true,
       createdAt: true,
       updatedAt: true,
+      image: true,
     },
   });
 
@@ -142,6 +143,7 @@ const myProfileInfo = async (id: string) => {
       is_verified: true,
       createdAt: true,
       updatedAt: true,
+      image: true,
     },
   });
 
@@ -163,6 +165,7 @@ const getSingleUser = async (id: string) => {
       is_verified: true,
       createdAt: true,
       updatedAt: true,
+      image: true,
     },
   });
 
@@ -184,10 +187,11 @@ const updateProfile = async (userId: string, data: Partial<UpdateUser>) => {
     throw new AppError(status.NOT_FOUND, "User not found");
   }
 
-  await prisma.user.update({
+  const result = await prisma.user.update({
     where: { id: userId },
     data,
   });
+  return result;
 };
 
 export const UserDataServices = {
