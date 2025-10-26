@@ -7,7 +7,7 @@ import sendResponse from "../../../shared/sendResponse";
 import { uploadImageToSupabase } from "../../middlewares/uploadImageToSupabase";
 import fs from "fs";
 import { nanoid } from "nanoid";
-
+import { v4 as uuidv4 } from "uuid";
 const getAll = catchAsync(async (req: Request, res: Response) => {
   const result = await ScreenService.getAllScreenFromDB(req.query);
   sendResponse(res, {
@@ -46,46 +46,29 @@ const getById = catchAsync(async (req: Request, res: Response) => {
 //       payload = req.body;
 //     }
 
-//     if(files.length === 0){
+//     if (!files || files.length === 0) {
 //       return res.status(400).json({
 //         success: false,
 //         message: "No image uploaded",
 //       });
 //     }
 
-//     // if (req.file) {
-//     //   try {
-//     //     const ImageName = `Image-${Date.now()}`;
-//     //     const imageLink = await uploadImageToSupabase(req.file, ImageName);
-//     //     img_url = imageLink;
+//     const imageUrls: { index: number; url: string }[] = [];
 
-//     //     fs.unlink(req.file.path, (err) => {
-//     //       if (err) {
-//     //         console.error("❌ Error deleting local file:", err);
-//     //       }
-//     //     });
-//     //   } catch (err) {
-//     //     console.error("❌ Upload error:", err);
-//     //     return res
-//     //       .status(500)
-//     //       .json({ success: false, message: "Image upload failed" });
-//     //   }
-//     // }
-//     const imageUrls: string[] = [];
-//     for (const file of files) {
+//     for (const [index, file] of files.entries()) {
 //       const fileName = `${Date.now()}_${file.originalname}`;
-//       const uploadedUrl = await uploadImageToSupabase(file, fileName); // Upload file
-//       imageUrls.push(uploadedUrl); // Store URL
+//       const uploadedUrl = await uploadImageToSupabase(file, fileName);
 
-//       // Remove local file
+//       imageUrls.push({
+//         index,
+//         url: uploadedUrl,
+//       });
+
+//       // remove local file
 //       fs.unlink(file.path, (err) => {
-//         if (err) {
-//           console.error("❌ Error deleting local file:", err);
-//         }
+//         if (err) console.error("❌ Error deleting local file:", err);
 //       });
 //     }
-
-//     console.log(imageUrls)
 
 //     const result = await ScreenService.postScreenIntoDB({
 //       ...payload,
@@ -128,14 +111,14 @@ const create = catchAsync(
       });
     }
 
-    const imageUrls: { index: number; url: string }[] = [];
+    const imageUrls: { index: string; url: string }[] = [];
 
-    for (const [index, file] of files.entries()) {
+    for (const file of files) {
       const fileName = `${Date.now()}_${file.originalname}`;
       const uploadedUrl = await uploadImageToSupabase(file, fileName);
 
       imageUrls.push({
-        index,
+        index: uuidv4(), // unique id for each image
         url: uploadedUrl,
       });
 
@@ -208,7 +191,7 @@ const updateSingleImage = catchAsync(
 
     const updatedScreen = await ScreenService.updateSingleImageUrl(
       id,
-      Number(index),
+      index,
       uploadedUrl
     );
 
@@ -244,25 +227,24 @@ const addNewImage = catchAsync(
     const { id } = req.params;
     const files = req.files as Express.Multer.File[];
 
-    if (!files || files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No image files provided",
-      });
-    }
+    if (!files || files.length === 0)
+      return res
+        .status(400)
+        .json({ success: false, message: "No image files provided" });
 
-    const uploadedUrls: string[] = [];
+    const newImages: { index: string; url: string }[] = [];
+
     for (const file of files) {
       const fileName = `${Date.now()}_${file.originalname}`;
       const uploadedUrl = await uploadImageToSupabase(file, fileName);
-      uploadedUrls.push(uploadedUrl);
+      newImages.push({ index: uuidv4(), url: uploadedUrl });
 
       fs.unlink(file.path, (err) => {
         if (err) console.error("❌ Error deleting local file:", err);
       });
     }
 
-    const updatedScreen = await ScreenService.addNewImage(id, uploadedUrls);
+    const updatedScreen = await ScreenService.addNewImage(id, newImages);
 
     sendResponse(res, {
       statusCode: status.OK,
@@ -342,8 +324,7 @@ const changeAvaillabilityStatus = catchAsync(
     sendResponse(res, {
       statusCode: status.OK,
       success: true,
-      message:
-        "Screen availlability status changed successfully",
+      message: "Screen availlability status changed successfully",
       data: result,
     });
   }
