@@ -6,7 +6,7 @@ import { CAMPAIGN_STATUS } from "@prisma/client";
 
 export const startCampaignStatusUpdater = () => {
   // Run the job every minute
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("*/10 * * * *", async () => {
     // Get today's date at 00:00:00
     const today = new Date();
     today.setHours(0, 0, 0, 0);
