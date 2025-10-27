@@ -10,7 +10,7 @@ import { sendOtpEmail } from "../../../utils/sendOtpEmail";
 import { sendPasswordResetOtp } from "../../../utils/sendResetPasswordOtp";
 
 const createUser = async (payload: User) => {
-  console.log({payload})
+  console.log({ payload });
   // Step 1: Check if user already exists
   const isUserExist = await prisma.user.findFirst({
     where: { email: payload.email },
@@ -160,6 +160,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
     {
       id: user.id,
       email: user.email,
+      image: user.image,
       first_name: user.first_name,
       last_name: user.last_name,
       role: user.role,
@@ -186,6 +187,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
       first_name: user.first_name,
       last_name: user.last_name,
       email: user.email,
+      image: user.image,
       phone: user.phone,
       role: user.role,
       organisation_role: user.organisation_role,
@@ -338,7 +340,6 @@ const resetPassword = async (
 
   return { message: "Password has been reset successfully" };
 };
-
 
 export const UserService = {
   createUser,
