@@ -85,7 +85,7 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
           ws.send(
             JSON.stringify({
               error: "Invalid message format or Receiver ID missing",
-            })
+            }),
           );
           return;
         }
@@ -108,7 +108,7 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
             JSON.stringify({
               type: "fetch_history",
               data: messages,
-            })
+            }),
           );
           return;
         }
@@ -137,7 +137,7 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
             JSON.stringify({
               type: "new_message",
               data: savedMessage,
-            })
+            }),
           );
           const res = await prisma.notification.create({
             data: {
@@ -152,7 +152,7 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
             JSON.stringify({
               type: "new_notification",
               data: res,
-            })
+            }),
           );
         }
 
@@ -162,7 +162,7 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
           JSON.stringify({
             type: "message_sent",
             data: savedMessage,
-          })
+          }),
         );
       } catch (error) {
         console.error("❌ WebSocket message error:", error);
