@@ -513,12 +513,29 @@ const myselfAllBundleCampaignFromDB = async (
         ],
       },
     },
+    // include: {
+    //   payment: true,
+    //   customer: {
+    //     select: { id: true, first_name: true, last_name: true, email: true },
+    //   },
+    //   bundle: true,
+    // },
+
     include: {
       payment: true,
-      customer: {
-        select: { id: true, first_name: true, last_name: true, email: true },
+      bundle: {
+        include: {
+          screens: true,
+        },
       },
-      bundle: true,
+      customer: {
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+        },
+      },
     },
     orderBy: { [sortBy || "createdAt"]: sortOrder || "desc" }, // dynamic sorting
     skip, // pagination offset
@@ -847,5 +864,5 @@ export const CampaignService = {
   getSingleBundleCampaignFromDB,
   getSingleCustomCampaignFromDB,
   makeUploadedContentDoneForBundleCampaign,
-  makeUploadedContentDoneForCustomCampaign
+  makeUploadedContentDoneForCustomCampaign,
 };
