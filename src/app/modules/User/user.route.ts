@@ -1,14 +1,15 @@
-import express from "express";
 
+import express from "express";
 import RoleValidation from "../../middlewares/RoleValidation";
 import { UserDataController } from "./user.controller";
 import { USER_ROLE } from "@prisma/client";
 import { upload } from "../../middlewares/upload";
+
 const router = express.Router();
 
 router.get(
   "/all-users",
-  RoleValidation(USER_ROLE.admin),
+  RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
   UserDataController.getAllUsers
 );
 
@@ -20,11 +21,9 @@ router.get(
 
 router.get(
   "/:id",
-  RoleValidation(USER_ROLE.admin),
+  RoleValidation(USER_ROLE.admin, USER_ROLE.customer),
   UserDataController.getSingleUser
 );
-
-
 
 router.patch(
   "/update-profile",
