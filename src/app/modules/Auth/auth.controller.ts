@@ -32,7 +32,7 @@ const createUser: RequestHandler = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
-    message: "User Registration Successfuly. Please verify your email.",
+    message: "OTP has been send , check your email ",
     data: result,
   });
 });

@@ -1,10 +1,12 @@
+
+
 import cron from "node-cron";
 import prisma from "../shared/prisma"; // your Prisma instance
 import { CAMPAIGN_STATUS } from "@prisma/client";
 
 export const startCampaignStatusUpdater = () => {
-  // Run the job every 2 hours
-  cron.schedule("0 */2 * * *", async () => {
+  // Run the job every minute
+  cron.schedule("*/10 * * * *", async () => {
     // Get today's date at 00:00:00
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -16,24 +18,22 @@ export const startCampaignStatusUpdater = () => {
     try {
       // ---------------- Bundle Campaigns ----------------
 
-      // Pending → Running (startDate today)
+      // Pending → Running (startDate <= today)
       const runningBundle = await prisma.bundleCampaign.updateMany({
         where: {
           startDate: {
-            gte: today,
-            lt: tomorrow,
+            lte: today, // startDate is today or earlier
           },
           status: CAMPAIGN_STATUS.pending,
         },
         data: { status: CAMPAIGN_STATUS.running },
       });
 
-      // Running → Completed (endDate today)
+      // Running → Completed (endDate <= today)
       const completedBundle = await prisma.bundleCampaign.updateMany({
         where: {
           endDate: {
-            gte: today,
-            lt: tomorrow,
+            lte: today, // endDate is today or earlier
           },
           status: CAMPAIGN_STATUS.running,
         },
@@ -42,24 +42,22 @@ export const startCampaignStatusUpdater = () => {
 
       // ---------------- Custom Campaigns ----------------
 
-      // Pending → Running (startDate today)
+      // Pending → Running (startDate <= today)
       const runningCustom = await prisma.customCampaign.updateMany({
         where: {
           startDate: {
-            gte: today,
-            lt: tomorrow,
+            lte: today, // startDate is today or earlier
           },
           status: CAMPAIGN_STATUS.pending,
         },
         data: { status: CAMPAIGN_STATUS.running },
       });
 
-      // Running → Completed (endDate today)
+      // Running → Completed (endDate <= today)
       const completedCustom = await prisma.customCampaign.updateMany({
         where: {
           endDate: {
-            gte: today,
-            lt: tomorrow,
+            lte: today, // endDate is today or earlier
           },
           status: CAMPAIGN_STATUS.running,
         },
