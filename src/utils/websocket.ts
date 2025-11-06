@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { IncomingMessage } from "http";
 import jwt from "jsonwebtoken";
 import WebSocket, { WebSocketServer } from "ws";
@@ -21,31 +21,6 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
 
     const token = url.searchParams.get("token");
 
-    console.log({ token });
-
-    // try {
-    //   if (!token) {
-    //     ws.close(1008, "Token missing");
-    //     return;
-    //   }
-
-    //   const decoded = jwt.verify(token, jwtSecret) as any;
-    //   console.log("decoded",{decoded})
-    //   ws.userId = decoded.id;
-    //   ws.name = decoded.first_name + ' ' + decoded.last_name;
-
-    //   if (!ws.userId) {
-    //     ws.close(1008, "Invalid token");
-    //     return;
-    //   }
-
-    //   onlineUsers.set(ws.userId, ws);
-
-    // } catch (err) {
-    //   ws.close(1008, "Authentication failed");
-    //   return;
-    // }
-
     try {
       if (!token) {
         ws.close(1008, "Token missing");
@@ -53,7 +28,6 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
       }
 
       const decoded = jwt.verify(token, jwtSecret) as any;
-      console.log("decoded", decoded); // <-- এখানে decoded আসা উচিত
 
       ws.userId = decoded.id;
       ws.name = decoded.first_name + " " + decoded.last_name;
@@ -65,7 +39,7 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
 
       onlineUsers.set(ws.userId, ws);
     } catch (err) {
-      console.error("JWT verification failed:", err); // <-- এখানে error দেখাবে
+
       ws.close(1008, "Authentication failed");
       return;
     }
@@ -73,7 +47,6 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
     ws.on("close", () => {
       if (ws.userId) {
         onlineUsers.delete(ws.userId);
-        console.log(`User ${ws.userId} disconnected`);
       }
     });
 
@@ -129,7 +102,7 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
         const savedMessage = await prisma.message.create({
           data: messagePayload,
         });
-
+        console.log(savedMessage);
         // If the receiver is online, send the new message + notification in real-time
         const receiverSocket = onlineUsers.get(msg.receiverId);
         if (receiverSocket && receiverSocket.readyState === WebSocket.OPEN) {
@@ -164,9 +137,47 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
             data: savedMessage,
           }),
         );
-      } catch (error) {
-        console.error("❌ WebSocket message error:", error);
-        ws.send(JSON.stringify({ error: "Internal server error" }));
+      } catch (error: any) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          // Prisma error handling
+          if (error.code === "P2003") {
+            // Foreign key constraint violation
+            console.error("Foreign key constraint violated:", error);
+            ws.send(
+              JSON.stringify({
+                error: "Invalid sender or receiver. Please verify user IDs.",
+              })
+            );
+          } else if (error.code === "P2002") {
+            // Unique constraint violation (e.g., duplicate message)
+            console.error("Unique constraint violation:", error);
+            ws.send(
+              JSON.stringify({
+                error: "Duplicate message detected. Please try again.",
+              })
+            );
+          } else if (error.code === "P2025") {
+            // Record not found
+            console.error("Record not found:", error);
+            ws.send(
+              JSON.stringify({
+                error: "Sender or receiver not found. Please verify the user IDs.",
+              })
+            );
+          } else {
+            // Catch other Prisma errors
+            console.error("Prisma error:", error);
+            ws.send(
+              JSON.stringify({
+                error: "Database error. Please try again later.",
+              })
+            );
+          }
+        } else {
+          // General error handling
+          console.error("Unexpected error:", error);
+          ws.send(JSON.stringify({ error: "Internal server error", fullError: error }));
+        }
       }
     });
   });

@@ -190,12 +190,15 @@ model Message {
   receiverId String
   text       String?
   isSeen     Boolean  @default(false)
-  // fileUrl    String?
-  // fileType   String?
   createdAt  DateTime @default(now())
 
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+
+  @@index([senderId])
+  @@index([createdAt])
+  @@index([receiverId])
 }
 
 model Notification {
@@ -205,8 +208,9 @@ model Notification {
   notificationDetail String
   isSeen             Boolean  @default(false)
   createdAt          DateTime @default(now())
-
   user User @relation(fields: [userId], references: [id])
+
+   @@index([userId])
 }
 
 model BundlePayment {
