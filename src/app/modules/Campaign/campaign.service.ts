@@ -151,7 +151,7 @@ const getAllBundleCampaignFromDB = async (query: any, dateFilter?: string) => {
   const monthlyRevenue = Object.entries(monthlyRevenueObj).map(
     ([year, months]) => ({
       year: Number(year),
-      months: Object.entries(months).map(([month, cost]) => ({ month, cost })),
+      months: Object.entries(months).map(([month, revenue]) => ({ month, revenue })),
     })
   );
 
@@ -599,7 +599,7 @@ const myselfAllBundleCampaignFromDB = async (
   const monthlyRevenue = Object.entries(monthlyRevenueObj).map(
     ([year, months]) => ({
       year: Number(year),
-      months: Object.entries(months).map(([month, cost]) => ({ month, cost })),
+      months: Object.entries(months).map(([month, revenue]) => ({ month, revenue })),
     })
   );
 
