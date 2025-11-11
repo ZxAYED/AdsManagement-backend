@@ -54,32 +54,148 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
       try {
         const msg = JSON.parse(data.toString());
 
-        if (!msg.receiverId) {
-          ws.send(
-            JSON.stringify({
-              error: "Invalid message format or Receiver ID missing",
-            }),
-          );
-          return;
-        }
+
 
         // Check if the message is a request for message history
         if (msg.type === "fetch_history") {
+
           const messages = await prisma.message.findMany({
             where: {
               OR: [
                 { senderId: ws.userId, receiverId: msg.receiverId },
                 { senderId: msg.receiverId, receiverId: ws.userId },
               ],
+
             },
             orderBy: {
               createdAt: "asc",
+            },
+            include: {
+              sender: true,
+              receiver: true,
             },
           });
 
           ws.send(
             JSON.stringify({
               type: "fetch_history",
+              data: messages,
+            }),
+          );
+          return;
+        }
+
+        if (msg.type === "fetch_chatList") {
+
+          const currentUserId = ws.userId!;
+          const getCounterpartUserId = (m: { senderId: string; receiverId: string }) =>
+            m.senderId === currentUserId ? m.receiverId : m.senderId;
+
+          // Step 1: distinct pairs (single lightweight query)
+          const pairs = await prisma.message.findMany({
+            where: { OR: [{ senderId: currentUserId }, { receiverId: currentUserId }] },
+            select: { senderId: true, receiverId: true },
+            distinct: ["senderId", "receiverId"],
+          });
+
+          // Step 2: unique counterpart ids
+          const counterpartIdSet = new Set<string>();
+          for (const p of pairs) {
+            if (p.senderId !== currentUserId) counterpartIdSet.add(p.senderId);
+            if (p.receiverId !== currentUserId) counterpartIdSet.add(p.receiverId);
+          }
+          const counterpartIds = Array.from(counterpartIdSet);
+
+          if (counterpartIds.length === 0) {
+            ws.send(JSON.stringify({ type: "fetch_chat_list", data: [] }));
+            return;
+          }
+
+          // Step 3: run both heavy queries in ONE transaction/connection
+          const [recent, users] = await prisma.$transaction([
+            prisma.message.findMany({
+              where: {
+                OR: counterpartIds.map((otherId) => ({
+                  OR: [
+                    { senderId: currentUserId, receiverId: otherId },
+                    { senderId: otherId, receiverId: currentUserId },
+                  ],
+                })),
+              },
+              orderBy: { createdAt: "desc" },
+              select: { id: true, senderId: true, receiverId: true, text: true, createdAt: true },
+            }),
+            prisma.user.findMany({
+              where: { id: { in: counterpartIds } },
+              select: { id: true, first_name: true, last_name: true, image: true, role: true },
+            }),
+          ]);
+
+          // Step 4: pick latest message per counterpart
+          const latestMessageByCounterpart = new Map<string, typeof recent[number]>();
+          for (const m of recent) {
+            const otherId = getCounterpartUserId(m);
+            if (!latestMessageByCounterpart.has(otherId)) {
+              latestMessageByCounterpart.set(otherId, m); // first is latest (desc order)
+            }
+          }
+
+          const userById = new Map(users.map((u) => [u.id, u]));
+
+          // Step 5: build rows & sort by latest message time desc
+          const rows = counterpartIds
+            .map((otherId) => {
+              const profile = userById.get(otherId);
+              const last = latestMessageByCounterpart.get(otherId) || null;
+              return {
+                counterpart: profile
+                  ? {
+                    id: profile.id,
+                    first_name: profile.first_name,
+                    last_name: profile.last_name,
+                    image: profile.image,
+                    role: profile.role,
+                  }
+                  : { id: otherId, first_name: "", last_name: "", image: null, role: "" },
+                lastMessage: last
+                  ? {
+                    id: last.id,
+                    text: last.text,
+                    createdAt: last.createdAt,
+                    from: last.senderId,
+                    to: last.receiverId,
+                  }
+                  : null,
+              };
+            })
+            .sort((a, b) => {
+              const ta = a.lastMessage ? +new Date(a.lastMessage.createdAt) : 0;
+              const tb = b.lastMessage ? +new Date(b.lastMessage.createdAt) : 0;
+              return tb - ta;
+            });
+
+          ws.send(JSON.stringify({ type: "fetch_chat_list", data: rows }));
+          return;
+        }
+
+
+
+        // Check if the message is a request for all available  admins
+        if (msg.type === "fetch_admins") {
+
+          const messages = await prisma.user.findMany({
+            where: {
+              OR: [
+                { role: "admin" },
+
+              ],
+
+            },
+          });
+
+          ws.send(
+            JSON.stringify({
+              type: "fetch_admins",
               data: messages,
             }),
           );
@@ -101,8 +217,13 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
 
         const savedMessage = await prisma.message.create({
           data: messagePayload,
+          include: {
+
+            sender: true,
+            receiver: true,
+          },
         });
-        console.log(savedMessage);
+
         // If the receiver is online, send the new message + notification in real-time
         const receiverSocket = onlineUsers.get(msg.receiverId);
         if (receiverSocket && receiverSocket.readyState === WebSocket.OPEN) {
@@ -119,6 +240,8 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
 
               notificationDetail: `💬 New message from ${ws.name} : "${msg.text}"`,
             },
+
+
           });
 
           receiverSocket.send(
@@ -138,7 +261,15 @@ export const setupWebSocket = (server: any, jwtSecret: string) => {
           }),
         );
       } catch (error: any) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error instanceof SyntaxError) {
+          console.error("JSON Parsing Error:", error.message);
+          ws.send(
+            JSON.stringify({
+              error:
+                "Invalid JSON payload. Please check the format of your message.",
+            })
+          );
+        } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
           // Prisma error handling
           if (error.code === "P2003") {
             // Foreign key constraint violation

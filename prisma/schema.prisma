@@ -195,10 +195,10 @@ model Message {
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, createdAt])
+  @@index([senderId, createdAt])
 
-  @@index([senderId])
-  @@index([createdAt])
-  @@index([receiverId])
 }
 
 model Notification {
@@ -258,8 +258,8 @@ model BundleContent {
 }
 
 enum CAMPAIGN_TYPE {
-  bundle // campaign based on a bundle
-  custom // campaign based on selected screens
+  bundle
+  custom 
 }
 
 enum CAMPAIGN_STATUS {
