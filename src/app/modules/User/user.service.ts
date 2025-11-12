@@ -1,10 +1,10 @@
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
 
+import { USER_STATUS } from "@prisma/client";
+import status from "http-status";
 import { buildDynamicFilters } from "../../../helpers/buildDynamicFilters";
 import AppError from "../../Errors/AppError";
-import status from "http-status";
-import { USER_STATUS } from "@prisma/client";
 
 const UserSearchableFields: any = ["first_name", "last_name", "email", "phone"];
 
@@ -128,7 +128,16 @@ const getAllUsers = async (options: any) => {
   return { data: users, meta, analytics };
 };
 
+const getAllAdmins = async (options: any) => {
+  const admins = await prisma.user.findMany({
+    where: { role: "admin" },
+    select: { id: true, first_name: true, last_name: true, image: true, role: true },
+    orderBy: { first_name: "asc" },
+  });
+  return admins;
+}
 const myProfileInfo = async (id: string) => {
+
   const result = await prisma.user.findUnique({
     where: { id },
     select: {
@@ -137,12 +146,7 @@ const myProfileInfo = async (id: string) => {
       last_name: true,
       email: true,
       phone: true,
-      organisation_name: true,
-      role: true,
-      organisation_role: true,
-      is_verified: true,
-      createdAt: true,
-      updatedAt: true,
+
       image: true,
     },
   });
@@ -199,4 +203,5 @@ export const UserDataServices = {
   getSingleUser,
   myProfileInfo,
   updateProfile,
+  getAllAdmins,
 };

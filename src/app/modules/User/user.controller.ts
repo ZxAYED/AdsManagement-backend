@@ -1,14 +1,25 @@
+import { Request } from "express";
+import fs from "fs";
 import status from "http-status";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
-import { UserDataServices } from "./user.service";
-import { Request } from "express";
-import { uploadImageToSupabase } from "../../middlewares/uploadImageToSupabase";
-import fs from "fs";
 import AppError from "../../Errors/AppError";
 import { deleteImageFromSupabase } from "../../middlewares/deleteImageFromSupabase";
+import { uploadImageToSupabase } from "../../middlewares/uploadImageToSupabase";
+import { UserDataServices } from "./user.service";
+
 const getAllUsers = catchAsync(async (req, res) => {
   const result = await UserDataServices.getAllUsers(req.query);
+
+  sendResponse(res, {
+    statusCode: status.OK,
+    success: true,
+    message: "All users fetched successfully.",
+    data: result,
+  });
+});
+const getAllAdmins = catchAsync(async (req, res) => {
+  const result = await UserDataServices.getAllAdmins(req.query);
 
   sendResponse(res, {
     statusCode: status.OK,
@@ -82,4 +93,5 @@ export const UserDataController = {
   getSingleUser,
   myProfileInfo,
   updateProfile,
+  getAllAdmins,
 };
