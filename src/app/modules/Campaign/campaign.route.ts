@@ -23,4 +23,7 @@ router.get(
 router.get("/myself-all-bundle-campaign", RoleValidation(USER_ROLE.customer), campaignController.myselfAllBundleCampaignFromDB);
 router.get("/myself-all-custom-campaign",RoleValidation(USER_ROLE.customer), campaignController.myselfAllCustomCampaignFromDB);
 
+router.patch("/make-uploaded-content-done-for-bundle-campaign/:id", RoleValidation(USER_ROLE.admin), campaignController.makeUploadedContentDoneForBundleCampaign);
+router.patch("/make-uploaded-content-done-for-custom-campaign/:id", RoleValidation(USER_ROLE.admin), campaignController.makeUploadedContentDoneForCustomCampaign);
+
 export const CampaignRoutes = router;

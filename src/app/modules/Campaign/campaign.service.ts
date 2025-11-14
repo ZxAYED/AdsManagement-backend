@@ -22,7 +22,7 @@ const getAllBundleCampaignFromDB = async (query: any, dateFilter?: string) => {
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-if (dateFilter) {
+  if (dateFilter) {
     const { start } = getDateRange(dateFilter);
 
     if (start) {
@@ -33,8 +33,8 @@ if (dateFilter) {
       endOfDay.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
-        gte: startOfDay, 
-        lte: endOfDay, 
+        gte: startOfDay,
+        lte: endOfDay,
       };
     }
   }
@@ -78,9 +78,9 @@ if (dateFilter) {
     include: {
       payment: true,
       bundle: {
-        include:{
-          screens:true
-        }
+        include: {
+          screens: true,
+        },
       },
       customer: {
         select: {
@@ -151,7 +151,7 @@ if (dateFilter) {
   const monthlyRevenue = Object.entries(monthlyRevenueObj).map(
     ([year, months]) => ({
       year: Number(year),
-      months: Object.entries(months).map(([month, cost]) => ({ month, cost })),
+      months: Object.entries(months).map(([month, revenue]) => ({ month, revenue })),
     })
   );
 
@@ -230,7 +230,7 @@ const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
- if (dateFilter) {
+  if (dateFilter) {
     const { start } = getDateRange(dateFilter);
 
     if (start) {
@@ -241,8 +241,8 @@ const getAllCustomCampaignFromDB = async (query: any, dateFilter?: string) => {
       endOfDay.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
-        gte: startOfDay, 
-        lte: endOfDay, 
+        gte: startOfDay,
+        lte: endOfDay,
       };
     }
   }
@@ -444,7 +444,7 @@ const myselfAllBundleCampaignFromDB = async (
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-if (dateFilter) {
+  if (dateFilter) {
     const { start } = getDateRange(dateFilter);
 
     if (start) {
@@ -455,8 +455,8 @@ if (dateFilter) {
       endOfDay.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
-        gte: startOfDay, 
-        lte: endOfDay, 
+        gte: startOfDay,
+        lte: endOfDay,
       };
     }
   }
@@ -513,12 +513,29 @@ if (dateFilter) {
         ],
       },
     },
+    // include: {
+    //   payment: true,
+    //   customer: {
+    //     select: { id: true, first_name: true, last_name: true, email: true },
+    //   },
+    //   bundle: true,
+    // },
+
     include: {
       payment: true,
-      customer: {
-        select: { id: true, first_name: true, last_name: true, email: true },
+      bundle: {
+        include: {
+          screens: true,
+        },
       },
-      bundle: true,
+      customer: {
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+        },
+      },
     },
     orderBy: { [sortBy || "createdAt"]: sortOrder || "desc" }, // dynamic sorting
     skip, // pagination offset
@@ -582,7 +599,7 @@ if (dateFilter) {
   const monthlyRevenue = Object.entries(monthlyRevenueObj).map(
     ([year, months]) => ({
       year: Number(year),
-      months: Object.entries(months).map(([month, cost]) => ({ month, cost })),
+      months: Object.entries(months).map(([month, revenue]) => ({ month, revenue })),
     })
   );
 
@@ -630,8 +647,6 @@ const myselfAllCustomCampaignFromDB = async (
     whereConditions.endDate = { lte: new Date(query.endDate) };
   }
 
-
-
   // 1️⃣ Count campaigns by status
 
   if (dateFilter) {
@@ -645,8 +660,8 @@ const myselfAllCustomCampaignFromDB = async (
       endOfDay.setHours(23, 59, 59, 999);
 
       whereConditions.startDate = {
-        gte: startOfDay, 
-        lte: endOfDay, 
+        gte: startOfDay,
+        lte: endOfDay,
       };
     }
   }
@@ -725,7 +740,8 @@ const myselfAllCustomCampaignFromDB = async (
       // });
 
       return {
-        ...campaign      };
+        ...campaign,
+      };
     })
   );
 
@@ -803,6 +819,43 @@ const myselfAllCustomCampaignFromDB = async (
   return { data: campaignsWithContents, meta };
 };
 
+const makeUploadedContentDoneForBundleCampaign = async (campaignId: string) => {
+  console.log("makeUploadedContentDoneForBundleCampaign", campaignId);
+  const isCampaignExist = await prisma.bundleCampaign.findUnique({
+    where: { id: campaignId },
+  });
+
+  if (!isCampaignExist) {
+    throw new AppError(status.NOT_FOUND, "Campaign not found");
+  }
+  if (isCampaignExist.isUploaded === true) {
+    throw new AppError(status.BAD_REQUEST, "Campaign Content already uploaded");
+  }
+
+  return await prisma.bundleCampaign.update({
+    where: { id: campaignId },
+    data: { isUploaded: true },
+  });
+};
+const makeUploadedContentDoneForCustomCampaign = async (campaignId: string) => {
+  console.log("makeUploadedContentDoneForCustomCampaign", campaignId);
+  const isCampaignExist = await prisma.customCampaign.findUnique({
+    where: { id: campaignId },
+  });
+
+  if (!isCampaignExist) {
+    throw new AppError(status.NOT_FOUND, "Campaign not found");
+  }
+  if (isCampaignExist.isUploaded === true) {
+    throw new AppError(status.BAD_REQUEST, "Campaign Content already uploaded");
+  }
+
+  return await prisma.customCampaign.update({
+    where: { id: campaignId },
+    data: { isUploaded: true },
+  });
+};
+
 export const CampaignService = {
   getAllBundleCampaignFromDB,
   getAllCustomCampaignFromDB,
@@ -810,4 +863,6 @@ export const CampaignService = {
   myselfAllCustomCampaignFromDB,
   getSingleBundleCampaignFromDB,
   getSingleCustomCampaignFromDB,
+  makeUploadedContentDoneForBundleCampaign,
+  makeUploadedContentDoneForCustomCampaign,
 };

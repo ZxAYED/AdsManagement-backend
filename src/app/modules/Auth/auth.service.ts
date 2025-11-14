@@ -1,15 +1,16 @@
-import prisma from "../../../shared/prisma";
-import bcrypt from "bcrypt";
-import config from "../../../config";
-import { Secret } from "jsonwebtoken";
-import { jwtHelpers } from "../../../helpers/jwtHelpers";
-import AppError from "../../Errors/AppError";
-import status from "http-status";
 import { User, USER_ROLE } from "@prisma/client";
+import bcrypt from "bcrypt";
+import status from "http-status";
+import { Secret } from "jsonwebtoken";
+import config from "../../../config";
+import { jwtHelpers } from "../../../helpers/jwtHelpers";
+import prisma from "../../../shared/prisma";
 import { sendOtpEmail } from "../../../utils/sendOtpEmail";
 import { sendPasswordResetOtp } from "../../../utils/sendResetPasswordOtp";
+import AppError from "../../Errors/AppError";
 
 const createUser = async (payload: User) => {
+
   // Step 1: Check if user already exists
   const isUserExist = await prisma.user.findFirst({
     where: { email: payload.email },
@@ -78,8 +79,6 @@ const resendOtp = async (email: string) => {
     },
   });
 
-  console.log("📨 New OTP generated:", otp);
-
   // Step 4: Send OTP email
   await sendOtpEmail(email, otp);
 
@@ -141,14 +140,14 @@ const loginUser = async (payload: { email: string; password: string }) => {
   if (!user.is_verified) {
     throw new AppError(
       status.UNAUTHORIZED,
-      "User not verified. Please verify your email/OTP."
+      "User not verified. Please verify your email/OTP.",
     );
   }
 
   // Step 3: Verify password
   const isCorrectPassword = await bcrypt.compare(
     payload.password,
-    user.password
+    user.password,
   );
   if (!isCorrectPassword) {
     throw new AppError(status.UNAUTHORIZED, "Incorrect password");
@@ -159,6 +158,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
     {
       id: user.id,
       email: user.email,
+      image: user.image,
       first_name: user.first_name,
       last_name: user.last_name,
       role: user.role,
@@ -169,13 +169,13 @@ const loginUser = async (payload: { email: string; password: string }) => {
       is_verified: user.is_verified,
     },
     config.jwt.access_token_secret as Secret,
-    config.jwt.access_token_expires_in as string
+    config.jwt.access_token_expires_in as string,
   );
 
   const refreshToken = jwtHelpers.generateToken(
     { email: user.email },
     config.jwt.refresh_token_secret as Secret,
-    config.jwt.refresh_token_expires_in as string
+    config.jwt.refresh_token_expires_in as string,
   );
 
   // Step 5: Return user info + tokens (exclude password)
@@ -185,6 +185,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
       first_name: user.first_name,
       last_name: user.last_name,
       email: user.email,
+      image: user.image,
       phone: user.phone,
       role: user.role,
       organisation_role: user.organisation_role,
@@ -201,7 +202,7 @@ const refreshAccessToken = async (token: string) => {
     // validate refresh token
     const decoded = jwtHelpers.verifyToken(
       token,
-      config.jwt.refresh_token_secret as Secret
+      config.jwt.refresh_token_secret as Secret,
     );
 
     const { email } = decoded;
@@ -228,7 +229,7 @@ const refreshAccessToken = async (token: string) => {
         is_verified: user.is_verified,
       },
       config.jwt.access_token_secret as Secret,
-      config.jwt.access_token_expires_in as string
+      config.jwt.access_token_expires_in as string,
     );
 
     return {
@@ -305,7 +306,7 @@ interface ResetPasswordPayload {
 }
 
 const resetPassword = async (
-  payload: ResetPasswordPayload & { opt?: string }
+  payload: ResetPasswordPayload & { opt?: string },
 ) => {
   const { email, otp, newPassword, opt } = payload;
   const otpCode = otp || opt; // use otp if present, otherwise opt
@@ -337,7 +338,6 @@ const resetPassword = async (
 
   return { message: "Password has been reset successfully" };
 };
-
 
 export const UserService = {
   createUser,

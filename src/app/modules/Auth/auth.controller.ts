@@ -3,14 +3,36 @@ import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import status from "http-status";
 import { UserService } from "./auth.service";
-
+import { uploadImageToSupabase } from "../../middlewares/uploadImageToSupabase";
+import fs from "fs";
+import AppError from "../../Errors/AppError";
 const createUser: RequestHandler = catchAsync(async (req, res) => {
-  const result = await UserService.createUser(req.body);
+  const parseData = JSON.parse(req.body.data);
+  console.log("🚀 ~ parseData:", parseData);
+  const file = req.file;
+  console.log("🚀 ~ file:", file);
+
+  if (file) {
+    const ImageName = `Image-${Date.now()}`;
+    const imageLink = await uploadImageToSupabase(req.file as any, ImageName);
+    parseData.image = imageLink;
+    fs.unlink((req.file as any).path, (err) => {
+      if (err) {
+        console.error("❌ Error deleting local file:", err);
+      }
+    });
+  } else {
+    throw new AppError(400, "Image is required");
+  }
+
+  console.log(parseData);
+
+  const result = await UserService.createUser(parseData);
 
   sendResponse(res, {
     statusCode: status.OK,
     success: true,
-    message: "User Registration Successfuly. Please verify your email.",
+    message: "OTP has been send , check your email ",
     data: result,
   });
 });
@@ -34,23 +56,23 @@ const verifyOtp: RequestHandler = catchAsync(async (req, res) => {
     data: result,
   });
 });
-const changePassword: RequestHandler = catchAsync(async (req:Request & {user?:any}, res) => {
+const changePassword: RequestHandler = catchAsync(
+  async (req: Request & { user?: any }, res) => {
+    const payload = {
+      ...req.body,
+      id: req.user?.id,
+    };
 
-  const payload={
-    ...req.body, 
-    id:req.user?.id
+    const result = await UserService.changePassword(payload);
+
+    sendResponse(res, {
+      statusCode: status.OK,
+      success: true,
+      message: "Password changed successfully.",
+      data: result,
+    });
   }
-
-
-  const result = await UserService.changePassword(payload);
-
-  sendResponse(res, {
-    statusCode: status.OK,
-    success: true,
-    message: "Password changed successfully.",
-    data: result,
-  });
-});
+);
 
 const loginUser: RequestHandler = catchAsync(async (req, res) => {
   const result = await UserService.loginUser(req.body);
@@ -70,7 +92,7 @@ const loginUser: RequestHandler = catchAsync(async (req, res) => {
 });
 
 const refreshToken: RequestHandler = catchAsync(async (req, res) => {
-  const refreshToken = req.cookies.refreshToken; 
+  const refreshToken = req.cookies.refreshToken;
   console.log({ refreshToken });
 
   const result = await UserService.refreshAccessToken(refreshToken);
@@ -82,7 +104,6 @@ const refreshToken: RequestHandler = catchAsync(async (req, res) => {
     data: result,
   });
 });
-
 
 const requestPasswordReset: RequestHandler = catchAsync(async (req, res) => {
   const result = await UserService.requestPasswordReset(req.body.email);
@@ -105,11 +126,6 @@ const resetPassword: RequestHandler = catchAsync(async (req, res) => {
   });
 });
 
-
-
-
-
-
 export const UserController = {
   createUser,
   loginUser,
@@ -118,5 +134,5 @@ export const UserController = {
   verifyOtp,
   changePassword,
   requestPasswordReset,
-  resetPassword
+  resetPassword,
 };

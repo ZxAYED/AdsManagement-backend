@@ -31,7 +31,16 @@ const calculatePagination = (options: IOptions): IOptionsResults => {
     sortOrder,
   };
 };
+function encodeCursor(dt: Date, id: string) {
+  return Buffer.from(`${dt.toISOString()}|${id}`).toString("base64");
+}
+function decodeCursor(cursor?: string | null) {
+  if (!cursor) return null;
+  const [iso, id] = Buffer.from(cursor, "base64").toString("utf8").split("|");
+  return { createdAt: new Date(iso), id };
+}
+
 
 export const paginationHelper = {
-  calculatePagination,
+  calculatePagination, encodeCursor, decodeCursor
 };

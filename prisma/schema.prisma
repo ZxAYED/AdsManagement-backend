@@ -13,6 +13,7 @@ model User {
   last_name         String
   phone             String
   email             String            @unique
+  image             String
   password          String
   organisation_name String
   role              USER_ROLE
@@ -63,7 +64,7 @@ model Screen {
   resolution   String
   lat          String
   lng          String
-  imageUrls    String[]
+  imageUrls    Json
   price        Float
   availability SCREEN_AVAILABILITY
   status       SCREEN_STATUS
@@ -101,6 +102,7 @@ model CustomCampaign {
   endDate     DateTime
   // contentIds String[] // array of BundleContent IDs
   contentUrls String[]
+  isUploaded  Boolean         @default(false)
   customer    User            @relation(fields: [customerId], references: [id])
   screens     Screen[]        @relation("CampaignScreens") // many-to-many
 
@@ -188,12 +190,15 @@ model Message {
   receiverId String
   text       String?
   isSeen     Boolean  @default(false)
-  // fileUrl    String?
-  // fileType   String?
   createdAt  DateTime @default(now())
 
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, createdAt])
+  @@index([senderId, createdAt])
+
 }
 
 model Notification {
@@ -203,8 +208,9 @@ model Notification {
   notificationDetail String
   isSeen             Boolean  @default(false)
   createdAt          DateTime @default(now())
-
   user User @relation(fields: [userId], references: [id])
+
+   @@index([userId])
 }
 
 model BundlePayment {
@@ -230,6 +236,7 @@ model BundleCampaign {
   status      CAMPAIGN_STATUS
   type        CAMPAIGN_TYPE
   contentUrls String[]
+  isUploaded  Boolean         @default(false)
   startDate   DateTime
   endDate     DateTime
   customer    User            @relation(fields: [customerId], references: [id])
@@ -251,8 +258,8 @@ model BundleContent {
 }
 
 enum CAMPAIGN_TYPE {
-  bundle // campaign based on a bundle
-  custom // campaign based on selected screens
+  bundle
+  custom 
 }
 
 enum CAMPAIGN_STATUS {

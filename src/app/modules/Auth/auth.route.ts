@@ -2,10 +2,11 @@ import express from "express";
 import { UserController } from "./auth.controller";
 import RoleValidation from "../../middlewares/RoleValidation";
 import { USER_ROLE } from "@prisma/client";
+import { upload } from "../../middlewares/upload";
 
 const router = express.Router();
 
-router.post("/create-user", UserController.createUser);
+router.post("/create-user",upload.single("file"), UserController.createUser);
 router.post("/resend-otp", UserController.resendOtp);
 router.post("/verify-otp", UserController.verifyOtp);
 router.post("/login", UserController.loginUser);
