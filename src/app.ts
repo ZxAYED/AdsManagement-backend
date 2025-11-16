@@ -1,10 +1,10 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Application, NextFunction, Request, Response } from "express";
-import cookieParser from "cookie-parser";
 import status from "http-status";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
-import router from "./app/routes";
 import { PaymentController } from "./app/modules/Payment/Payment.controller";
+import router from "./app/routes";
 
 const app: Application = express();
 
@@ -29,8 +29,8 @@ app.use(
   PaymentController.stripeWebhook
 );
 
-app.use(express.json({ limit: "5000mb" })); // increase JSON body limit
-app.use(express.urlencoded({ limit: "5000mb", extended: true })); // increase form body limit
+app.use(express.json({ limit: "50000mb" })); // increase JSON body limit
+app.use(express.urlencoded({ limit: "50000mb", extended: true })); // increase form body limit
 
 app.use("/api", router);
 

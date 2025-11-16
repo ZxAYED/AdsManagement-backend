@@ -11,5 +11,23 @@ services:
       - "3015:3015"
     env_file:
       - .env
+    depends_on:
+      - postgres
     volumes:
       - ./uploads:/usr/src/app/uploads
+
+  postgres:
+    image: postgres:16
+    container_name: danaj_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: danaj_db
+    ports:
+      - "5433:5432" # Host 5433 → Container 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
