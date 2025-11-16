@@ -2,7 +2,7 @@
   <a href="." target="_blank">
     <img src="https://res.cloudinary.com/dhl04adhz/image/upload/v1763275245/logo_demicy.png" alt="SceneAds Logo" height="96" />
   </a>
-  <h1>sceneAds – Ad Management Platform (Backend) 🔧🚀</h1>
+  <h1>sceneAds – Ad Management Platform (Backend) </h1>
 
   <p><em>A robust, modular backend powering an ad management e‑commerce platform. Built for teams, designed to scale.</em></p>
 
