@@ -177,4 +177,4 @@ src/
 
 ## 📜 License
 
-This repository is part of a team project. If you plan to reuse code, ensure you follow your organization’s licensing and contribution guidelines.
+This repository is part of a team project. If you plan to reuse code, ensure you inform me first then follow your organization’s licensing and contribution guidelines.
