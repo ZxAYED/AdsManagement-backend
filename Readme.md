@@ -1,8 +1,8 @@
 <div align="center">
   <a href="." target="_blank">
-    <img src="https://res.cloudinary.com/dhl04adhz/image/upload/v1763275245/logo_demicy.png" alt="SceneAds Logo" height="84" />
+    <img src="https://res.cloudinary.com/dhl04adhz/image/upload/v1763275245/logo_demicy.png" alt="SceneAds Logo" height="96" />
   </a>
-  <h1>sceneAds – Ad Management Platform (Backend)</h1>
+  <h1>sceneAds – Ad Management Platform (Backend) 🔧🚀</h1>
 
   <p><em>A robust, modular backend powering an ad management e‑commerce platform. Built for teams, designed to scale.</em></p>
 
@@ -14,30 +14,39 @@
     <img alt="Prisma" src="https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma&logoColor=white" />
     <img alt="Stripe" src="https://img.shields.io/badge/Stripe-Payments-635BFF?style=for-the-badge&logo=stripe&logoColor=white" />
     <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Storage-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" />
-    <img alt="WS" src="https://img.shields.io/badge/WebSocket-WS-2C3E50?style=for-the-badge" />
+    <img alt="WebSocket" src="https://img.shields.io/badge/WebSocket-Real‑Time-2C3E50?style=for-the-badge&logo=websocket&logoColor=white" />
+    <img alt="JWT" src="https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" />
+    <img alt="Cron" src="https://img.shields.io/badge/Cron-Scheduler-3B82F6?style=for-the-badge&logo=cron&logoColor=white" />
+    <img alt="ESLint" src="https://img.shields.io/badge/ESLint-Quality-3A33D1?style=for-the-badge&logo=eslint&logoColor=white" />
+  </p>
+
+  <p>
+    <img alt="Status" src="https://img.shields.io/badge/Status-Active-22C55E?style=flat-square" />
+    <img alt="Contributions" src="https://img.shields.io/badge/Contributions-Welcome-F59E0B?style=flat-square" />
+    <img alt="License" src="https://img.shields.io/badge/License-Internal-64748B?style=flat-square" />
   </p>
 </div>
 
+<hr/>
+
+## ✨ Features
+
+- 👤 **User Authentication & Management** – Secure registration, login, profile management with **RBAC**.
+- 🎯 **Ad Campaign Management** – Create, manage, and monitor advertising campaigns.
+- 🖼️ **Banner Management** – Upload and manage ad banners.
+- 🧱 **Bundle & Screen Management** – Group ads into bundles and manage screen placements.
+- 💳 **Payment Processing** – **Stripe** integration for secure transactions.
+- ⚡ **Real-time Chat System** (WebSocket)
+  - 🔐 **JWT-based** auth for WS connections
+  - 💬 Live messaging (one‑to‑one)
+  - 🧾 Message persistence & history fetching
+  - 🔔 Instant notifications on new messages
+- ⏰ **Scheduled Tasks** – Cron jobs for automated tasks (e.g., campaign status updates).
+- ☁️ **File Storage** – **Supabase** for cloud file storage (images/videos/docs).
+
 ---
 
-## Features
-
-- **User Authentication & Management** – Secure registration, login, profile management with role‑based access control (RBAC).
-- **Ad Campaign Management** – Create, manage, and monitor advertising campaigns.
-- **Banner Management** – Upload and manage ad banners.
-- **Bundle & Screen Management** – Group ads into bundles and manage screen placements.
-- **Payment Processing** – Stripe integration for secure transactions.
-- **Real‑time Chat System** (WebSocket)  
-  - JWT‑based auth for WS connections  
-  - Live messaging (one‑to‑one)  
-  - Message persistence & history fetching  
-  - Instant notifications on new messages
-- **Scheduled Tasks** – Cron jobs for automated tasks (e.g., campaign status updates).
-- **File Storage** – Supabase for cloud file storage (images/videos/docs).
-
----
-
-## Technologies
+## 🧰 Technologies
 
 - **Backend:** Node.js, Express.js, TypeScript  
 - **Database:** PostgreSQL + Prisma ORM  
@@ -47,14 +56,16 @@
 - **Realtime:** `ws` (WebSocket)  
 - **Scheduling:** `node-cron`
 
+> 🧠 Tip: Keep servers, DB, and storage in the same region for lower latency and smoother real‑time UX.
+
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 Follow these steps to run the project locally for development/testing.
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) **v22+**
+### ✅ Prerequisites
+- [Node.js](https://nodejs.org/) **v18+**
 - [npm](https://www.npmjs.com/) (or pnpm/yarn)
 - [PostgreSQL](https://www.postgresql.org/)
 
@@ -66,7 +77,7 @@ cd danaj242-backend
 npm install
 ```
 
-### 2) Environment Variables
+### 2) 🔐 Environment Variables
 
 Create a `.env` file in the repo root and fill in your credentials:
 
@@ -92,7 +103,7 @@ EMAIL_USER="your-email@example.com"
 EMAIL_PASS="your-email-password"
 ```
 
-### 3) Database Setup
+### 3) 🗃️ Database Setup
 
 ```bash
 # Apply migrations (production-safe)
@@ -102,7 +113,7 @@ npx prisma migrate deploy
 npx prisma generate
 ```
 
-### 4) Run
+### 4) ▶️ Run
 
 **Development**
 ```bash
@@ -118,14 +129,14 @@ npm run start:prod
 
 ---
 
-## API Endpoints (High Level)
+## 🧭 API Endpoints (High Level)
 
 - `POST /api/v1/auth/*` – Authentication & user login
 - `GET/POST/PUT/DELETE /api/v1/users/*` – User management
 - `GET/POST/PUT/DELETE /api/v1/banners/*` – Banner management
 - `GET/POST/PUT/DELETE /api/v1/bundles/*` – Bundle management
 - `GET/POST/PUT/DELETE /api/v1/campaigns/*` – Campaign management
-- `GET/POST /api/v1/payments/*` – Payment processing (Stripe)
+- `GET/POST /api/v1/payments/*` – Payment processing (**Stripe**)
 - `GET/POST/PUT/DELETE /api/v1/screens/*` – Screen management
 - `POST /api/v1/get-in-touch` – Contact/lead forms
 
@@ -133,7 +144,7 @@ npm run start:prod
 
 ---
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```bash
 src/
@@ -151,19 +162,19 @@ src/
 └─ server.ts            # Server entry point
 ```
 
-> Note: ensure directory names match your actual repo (e.g., `cron` vs `corn`).
+> 🔎 Note: ensure directory names match your repo (e.g., `cron` vs `corn`).
 
 ---
 
-## Development Tips
+## 💡 Development Tips
 
-- Use **strict TypeScript** and **ESLint** for reliability.
-- Keep long‑running/expensive reads over **HTTP** with pagination; use **WebSocket** for push events (new messages, notifications).
-- Add **indexes** on frequently queried columns (e.g., message timestamps, foreign keys).
-- Prefer **cursor (keyset) pagination** for chat/message history.
+- 🧩 Use **strict TypeScript** and **ESLint** for reliability.
+- 📬 Keep long-running/expensive reads over **HTTP** with pagination; use **WebSocket** for push events (new messages, notifications).
+- ⚙️ Add **indexes** on frequently queried columns (e.g., message timestamps, foreign keys).
+- ⏩ Prefer **cursor (keyset) pagination** for chat/message history.
 
 ---
 
-## License
+## 📜 License
 
-This repository is part of a team project. If you plan to reuse code, ensure you inform me  first and follow contribution guidelines.
+This repository is part of a team project. If you plan to reuse code, ensure you follow your organization’s licensing and contribution guidelines.
