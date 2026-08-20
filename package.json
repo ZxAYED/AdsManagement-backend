@@ -5,10 +5,10 @@
   "scripts": {
     "postinstall": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
-    "start": "NODE_ENV=production node ./dist/server.js",
-    "start:prod": "npx prisma migrate deploy && npx prisma generate && npm run start"
+    "dev": "node init && ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "node init && tsc",
+    "start": "node init && NODE_ENV=production node ./dist/server.js",
+    "start:prod": "node init && npx prisma migrate deploy && npx prisma generate && npm run start"
   },
   "keywords": [],
   "author": "",
